@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReAI Time Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>ReAI Time Tracker</h1>
+        <p>Track your time and sync with ReAI platform</p>
+    </header>
+
+    <div class="employee-section">
+        <h3>Select Employee</h3>
+        <select id="employee-select" onchange="selectEmployee()">
+            <option value="">-- Select Employee --</option>
+        </select>
+        <div id="selected-employee" class="selected-info"></div>
+    </div>
+
+    <div class="timer-section" id="timer-section" style="display: none;">
+        <h3>Time Tracker</h3>
+        <div id="current-timer" class="timer-display">
+            No active timer
+        </div>
+
+        <div class="timer-controls">
+            <input type="text"
+                   id="project-name"
+                   placeholder="Enter project name..."
+                   maxlength="100">
+            <div class="button-group">
+                <button onclick="startTimer()" class="btn btn-start">Start</button>
+                <button onclick="stopTimer()" class="btn btn-stop">Stop</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="entries-section" style="display: none;">
+        <div class="section-header">
+            <h3>Time Entries</h3>
+            <button onclick="syncToReai()" class="btn btn-sync">Sync to ReAI</button>
+        </div>
+        <div id="entries" class="entries-container"></div>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+        Loading...
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

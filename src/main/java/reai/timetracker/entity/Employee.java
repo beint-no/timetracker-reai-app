@@ -19,7 +19,6 @@ public class Employee {
     @Column(name = "tenant_id")
     private Long tenantId;
 
-    // Constructors
     public Employee() {}
 
     public Employee(Long id, String name, String email) {

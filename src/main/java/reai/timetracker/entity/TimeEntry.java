@@ -31,7 +31,9 @@ public class TimeEntry {
 
     private boolean synced = false;
 
-    // Constructors
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     public TimeEntry() {}
 
     public TimeEntry(String projectName, Long employeeId) {
@@ -39,8 +41,6 @@ public class TimeEntry {
         this.employeeId = employeeId;
         this.startTime = LocalDateTime.now();
     }
-
-    // Business methods
     public Duration getDuration() {
         LocalDateTime end = endTime != null ? endTime : LocalDateTime.now();
         return Duration.between(startTime, end);
@@ -57,8 +57,6 @@ public class TimeEntry {
     public long getDurationMinutes() {
         return getDuration().toMinutes();
     }
-
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -85,4 +83,7 @@ public class TimeEntry {
 
     public boolean isSynced() { return synced; }
     public void setSynced(boolean synced) { this.synced = synced; }
+
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
 }

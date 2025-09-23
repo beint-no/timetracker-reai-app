@@ -43,6 +43,7 @@ bin/
 /dist/
 /nbdist/
 /.nb-gradle/
+/build
 
 # OS generated files
 .DS_Store
@@ -81,7 +82,6 @@ application-*.properties
 *.db
 *.mv.db
 *.trace.db
-
 # Environment variables
 .env
 .env.local

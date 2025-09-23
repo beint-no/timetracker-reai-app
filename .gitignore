@@ -3,8 +3,7 @@
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
-!**/src/test/**/build/
-
+/**/build/
 # Gradle cache and build output cleanup
 buildOutputCleanup.lock
 cache.properties

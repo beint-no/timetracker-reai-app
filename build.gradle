@@ -19,7 +19,6 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
@@ -28,9 +27,9 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    runtimeOnly("com.h2database:h2")
-    runtimeOnly("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-core:10.19.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.19.0")
+    runtimeOnly("org.postgresql:postgresql:42.7.4")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 

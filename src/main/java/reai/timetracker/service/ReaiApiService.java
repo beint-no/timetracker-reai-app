@@ -14,11 +14,14 @@ public class ReaiApiService {
 
     private final WebClient webClient;
 
-    @Value("${reai.api.base-url:http://localhost:8080}")
+    @Value("${reai.api.base-url}")
     private String reaiApiBaseUrl;
 
-    @Value("${reai.api.tenant-id:1}")
-    private Long tenantId;
+    @Value("${reai.api.client-id}")
+    private String clientId;
+
+    @Value("${reai.api.client-secret}")
+    private String clientSecret;
 
     public ReaiApiService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.build();
@@ -26,26 +29,14 @@ public class ReaiApiService {
 
     public List<Employee> getEmployees() {
         try {
-            // TODO: Replace with actual ReAI API call
-            // For now, return mock data
-            List<Employee> employees = new ArrayList<>();
-            employees.add(new Employee(1L, "John Doe", "john@company.com"));
-            employees.add(new Employee(2L, "Jane Smith", "jane@company.com"));
-            employees.add(new Employee(3L, "Bob Johnson", "bob@company.com"));
-            employees.add(new Employee(4L, "Alice Brown", "alice@company.com"));
-            return employees;
-
-            /*
-            // Actual implementation when ReAI API is ready:
             return webClient.get()
-                .uri(reaiApiBaseUrl + "/api/employees?tenantId=" + tenantId)
-                .retrieve()
-                .bodyToFlux(Employee.class)
-                .collectList()
-                .block();
-            */
+                    .uri(reaiApiBaseUrl + "/api/employees?tenantId=1")
+                    .header("Authorization", "Bearer " + getAccessToken())
+                    .retrieve()
+                    .bodyToFlux(Employee.class)
+                    .collectList()
+                    .block();
         } catch (Exception e) {
-            // Fallback to mock data
             return getMockEmployees();
         }
     }
@@ -59,18 +50,17 @@ public class ReaiApiService {
 
     public boolean syncTimeEntry(TimeEntry entry) {
         try {
-            // TODO: Implement actual sync to ReAI API
-            /*
-            webClient.post()
-                .uri(reaiApiBaseUrl + "/api/timesheet/entries")
-                .bodyValue(entry)
-                .retrieve()
-                .toBodilessEntity()
-                .block();
-            */
+            // Create a simple DTO to send to ReAI API
+            TimesheetEntryDto reaiEntry = mapToReaiEntry(entry);
 
-            // For now, simulate successful sync
-            System.out.println("Syncing time entry: " + entry.getProjectName() + " - " + entry.getDurationMinutes() + " minutes");
+            webClient.post()
+                    .uri(reaiApiBaseUrl + "/api/timesheet/entries")
+                    .header("Authorization", "Bearer " + getAccessToken())
+                    .bodyValue(reaiEntry)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+
             return true;
         } catch (Exception e) {
             System.err.println("Failed to sync time entry: " + e.getMessage());
@@ -78,10 +68,56 @@ public class ReaiApiService {
         }
     }
 
+    private TimesheetEntryDto mapToReaiEntry(TimeEntry entry) {
+        TimesheetEntryDto dto = new TimesheetEntryDto();
+        dto.setEmployeeId(entry.getEmployeeId());
+        dto.setProjectName(entry.getProjectName());
+        dto.setStartTime(entry.getStartTime());
+        dto.setEndTime(entry.getEndTime());
+        dto.setDescription(entry.getDescription());
+        dto.setBillable(entry.isBillable());
+        return dto;
+    }
+
+    private String getAccessToken() {
+        return "mock-access-token";
+    }
+
     private List<Employee> getMockEmployees() {
         List<Employee> employees = new ArrayList<>();
         employees.add(new Employee(1L, "John Doe", "john@company.com"));
         employees.add(new Employee(2L, "Jane Smith", "jane@company.com"));
+        employees.add(new Employee(3L, "Bob Johnson", "bob@company.com"));
+        employees.add(new Employee(4L, "Alice Brown", "alice@company.com"));
         return employees;
+    }
+
+    // DTO class để gửi data tới ReAI API
+    public static class TimesheetEntryDto {
+        private Long employeeId;
+        private String projectName;
+        private java.time.LocalDateTime startTime;
+        private java.time.LocalDateTime endTime;
+        private String description;
+        private boolean billable;
+
+        // Getters and setters
+        public Long getEmployeeId() { return employeeId; }
+        public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+
+        public String getProjectName() { return projectName; }
+        public void setProjectName(String projectName) { this.projectName = projectName; }
+
+        public java.time.LocalDateTime getStartTime() { return startTime; }
+        public void setStartTime(java.time.LocalDateTime startTime) { this.startTime = startTime; }
+
+        public java.time.LocalDateTime getEndTime() { return endTime; }
+        public void setEndTime(java.time.LocalDateTime endTime) { this.endTime = endTime; }
+
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+
+        public boolean isBillable() { return billable; }
+        public void setBillable(boolean billable) { this.billable = billable; }
     }
 }

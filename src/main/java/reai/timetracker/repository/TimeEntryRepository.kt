@@ -1,45 +1,29 @@
-package reai.timetracker.repository;
+package reai.timetracker.repository
 
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-import reai.timetracker.entity.TimeEntry;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+import reai.timetracker.entity.TimeEntry
+import java.util.*
 
 @Repository
-public interface TimeEntryRepository extends JpaRepository<TimeEntry, Long> {
+interface TimeEntryRepository : JpaRepository<TimeEntry, Long> {
 
-    List<TimeEntry> findByEmployeeIdAndTenantIdOrderByStartTimeDesc(Long employeeId, Long tenantId);
+    fun findByEmployeeIdAndEndTimeIsNullAndTenantId(
+        employeeId: Long,
+        tenantId: Long
+    ): Optional<TimeEntry>
 
-    Optional<TimeEntry> findByEmployeeIdAndEndTimeIsNullAndTenantId(Long employeeId, Long tenantId);
+    fun findByEmployeeIdAndTenantIdOrderByStartTimeDesc(
+        employeeId: Long,
+        tenantId: Long
+    ): List<TimeEntry>
 
-    List<TimeEntry> findByEmployeeIdAndTenantIdAndStartTimeBetween(
-            Long employeeId,
-            Long tenantId,
-            LocalDateTime start,
-            LocalDateTime end
-    );
+    fun findByIdAndTenantId(
+        id: Long,
+        tenantId: Long
+    ): Optional<TimeEntry>
 
-    Optional<TimeEntry> findByIdAndTenantId(Long id, Long tenantId);
+    fun findUnsyncedEntriesByTenantId(tenantId: Long): List<TimeEntry>
 
-    @Query("SELECT te FROM TimeEntry te WHERE te.synced = false AND te.tenantId = :tenantId")
-    List<TimeEntry> findUnsyncedEntriesByTenantId(@Param("tenantId") Long tenantId);
-
-    List<TimeEntry> findByProjectNameContainingIgnoreCaseAndTenantId(String projectName, Long tenantId);
-
-    List<TimeEntry> findByTenantIdOrderByStartTimeDesc(Long tenantId);
-
-    @Deprecated
-    List<TimeEntry> findByEmployeeIdOrderByStartTimeDesc(Long employeeId);
-
-    @Deprecated
-    Optional<TimeEntry> findByEmployeeIdAndEndTimeIsNull(Long employeeId);
-
-    @Deprecated
-    @Query("SELECT te FROM TimeEntry te WHERE te.synced = false")
-    List<TimeEntry> findUnsyncedEntries();
+    fun findByTenantIdOrderByStartTimeDesc(tenantId: Long): List<TimeEntry>
 }

@@ -24,13 +24,11 @@ CREATE TABLE time_entries
     FOREIGN KEY (employee_id) REFERENCES employees (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_employees_tenant_id ON employees(tenant_id);
-CREATE INDEX idx_employees_email_tenant ON employees(email, tenant_id);
-CREATE INDEX idx_time_entries_tenant_id ON time_entries(tenant_id);
-CREATE INDEX idx_time_entries_employee_tenant ON time_entries(employee_id, tenant_id);
-CREATE INDEX idx_time_entries_synced_tenant ON time_entries(synced, tenant_id);
-CREATE INDEX idx_time_entries_start_time ON time_entries(start_time);
-ALTER TABLE employees DROP CONSTRAINT IF EXISTS employees_email_key;
-ALTER TABLE employees ADD CONSTRAINT employees_email_tenant_unique UNIQUE (email, tenant_id);
-
+CREATE TABLE tenant_oauth_configs (
+                                      tenant_id BIGINT PRIMARY KEY,
+                                      client_id VARCHAR(255) NOT NULL,
+                                      client_secret VARCHAR(255) NOT NULL,
+                                      scopes VARCHAR(500) DEFAULT NULL,
+                                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 

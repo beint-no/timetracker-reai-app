@@ -1,92 +1,125 @@
-package reai.timetracker.controller;
+package reai.timetracker.controller
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import reai.timetracker.config.UserPrincipal;
-import reai.timetracker.entity.TimeEntry;
-import reai.timetracker.service.TimeTrackerService;
-
-import java.util.List;
+import org.slf4j.LoggerFactory
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import reai.timetracker.entity.TimeEntry
+import reai.timetracker.service.TimeTrackerService
 
 @RestController
 @RequestMapping("/api/time")
-@CrossOrigin(origins = "*")
-public class TimeTrackerController {
+@CrossOrigin(origins = ["*"])
+class TimeTrackerController(
+        private val timeTrackerService: TimeTrackerService
+) {
 
-    @Autowired
-    private TimeTrackerService timeTrackerService;
+    private val logger = LoggerFactory.getLogger(TimeTrackerController::class.java)
 
     @PostMapping("/start")
-    public ResponseEntity<TimeEntry> startTimer(
-            @RequestParam String projectName,
-            @RequestParam Long employeeId,
-            Authentication authentication) {
-
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        TimeEntry entry = timeTrackerService.startTimer(projectName, employeeId, user.getTenantId());
-        return ResponseEntity.ok(entry);
+    fun startTimer(
+            @RequestParam projectName: String,
+            @RequestParam employeeId: Long,
+            @RequestParam tenantId: Long
+    ): ResponseEntity<TimeEntry> {
+        logger.debug("Starting timer for project: {}, employeeId: {}, tenantId: {}", projectName, employeeId, tenantId)
+        return try {
+            val entry = timeTrackerService.startTimer(projectName, employeeId, tenantId)
+            ResponseEntity.ok(entry)
+        } catch (e: Exception) {
+            logger.error("Failed to start timer: {}", e.message)
+            ResponseEntity.status(500).body(null)
+        }
     }
 
     @PostMapping("/stop")
-    public ResponseEntity<TimeEntry> stopTimer(
-            @RequestParam Long employeeId,
-            Authentication authentication) {
-
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        TimeEntry entry = timeTrackerService.stopTimer(employeeId, user.getTenantId());
-        if (entry != null) {
-            return ResponseEntity.ok(entry);
+    fun stopTimer(
+            @RequestParam employeeId: Long,
+            @RequestParam tenantId: Long
+    ): ResponseEntity<TimeEntry> {
+        logger.debug("Stopping timer for employeeId: {}, tenantId: {}", employeeId, tenantId)
+        return try {
+            val entry = timeTrackerService.stopTimer(employeeId, tenantId)
+            if (entry != null) ResponseEntity.ok(entry) else ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to stop timer: {}", e.message)
+            ResponseEntity.status(500).body(null)
         }
-        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/current")
-    public ResponseEntity<TimeEntry> getCurrentTimer(
-            @RequestParam Long employeeId,
-            Authentication authentication) {
-
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        return timeTrackerService.getCurrentTimer(employeeId, user.getTenantId())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    fun getCurrentTimer(
+            @RequestParam employeeId: Long,
+            @RequestParam tenantId: Long
+    ): ResponseEntity<TimeEntry> {
+        logger.debug("Getting current timer for employeeId: {}, tenantId: {}", employeeId, tenantId)
+        return try {
+            timeTrackerService.getCurrentTimer(employeeId, tenantId)
+                    .map { ResponseEntity.ok(it) }
+                .orElse(ResponseEntity.notFound().build())
+        } catch (e: Exception) {
+            logger.error("Failed to get current timer: {}", e.message)
+            ResponseEntity.status(500).body(null)
+        }
     }
 
     @GetMapping("/entries")
-    public List<TimeEntry> getTimeEntries(
-            @RequestParam Long employeeId,
-            Authentication authentication) {
-
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        return timeTrackerService.getTimeEntries(employeeId, user.getTenantId());
+    fun getTimeEntries(
+            @RequestParam employeeId: Long,
+            @RequestParam tenantId: Long
+    ): ResponseEntity<List<TimeEntry>> {
+        logger.debug("Getting time entries for employeeId: {}, tenantId: {}", employeeId, tenantId)
+        return try {
+            val entries = timeTrackerService.getTimeEntries(employeeId, tenantId)
+            ResponseEntity.ok(entries)
+        } catch (e: Exception) {
+            logger.error("Failed to get time entries: {}", e.message)
+            ResponseEntity.status(500).body(null)
+        }
     }
 
     @PutMapping("/entries/{id}")
-    public ResponseEntity<TimeEntry> updateEntry(
-            @PathVariable Long id,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) Boolean billable,
-            Authentication authentication) {
-
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        TimeEntry updated = timeTrackerService.updateEntry(id, description, billable, user.getTenantId());
-        if (updated != null) {
-            return ResponseEntity.ok(updated);
+    fun updateEntry(
+            @PathVariable id: Long,
+            @RequestParam(required = false) description: String?,
+            @RequestParam(required = false) billable: Boolean?,
+            @RequestParam tenantId: Long
+    ): ResponseEntity<TimeEntry> {
+        logger.debug("Updating time entry with id: {}, tenantId: {}", id, tenantId)
+        return try {
+            val updated = timeTrackerService.updateEntry(id, description, billable, tenantId)
+            if (updated != null) ResponseEntity.ok(updated) else ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to update time entry: {}", e.message)
+            ResponseEntity.status(500).body(null)
         }
-        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/sync")
-    public ResponseEntity<String> syncToReai(Authentication authentication) {
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        int synced = timeTrackerService.syncUnsyncedEntries(user.getTenantId());
-        return ResponseEntity.ok("Synced " + synced + " entries to ReAI");
+    fun syncToReai(@RequestParam tenantId: Long): ResponseEntity<String> {
+        logger.debug("Syncing time entries to ReAI for tenantId: {}", tenantId)
+        return try {
+            val synced = timeTrackerService.syncUnsyncedEntries(tenantId)
+            ResponseEntity.ok("Synced $synced entries to ReAI")
+        } catch (e: Exception) {
+            logger.error("Failed to sync time entries: {}", e.message)
+            ResponseEntity.status(500).body("Failed to sync time entries")
+        }
     }
 
     @GetMapping("/entries/all")
-    public List<TimeEntry> getAllTimeEntries(Authentication authentication) {
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        return timeTrackerService.getAllTimeEntries(user.getTenantId());
+    fun getAllTimeEntries(@RequestParam tenantId: Long): ResponseEntity<List<TimeEntry>> {
+        logger.debug("Getting all time entries for tenantId: {}", tenantId)
+        return try {
+            val entries = timeTrackerService.getAllTimeEntries(tenantId)
+            ResponseEntity.ok(entries)
+        } catch (e: Exception) {
+            logger.error("Failed to get all time entries: {}", e.message)
+            ResponseEntity.status(500).body(null)
+        }
     }
+
+    data class TenantDto(
+            val id: Long,
+            val name: String
+    )
 }

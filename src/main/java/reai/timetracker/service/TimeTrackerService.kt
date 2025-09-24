@@ -1,95 +1,82 @@
-package reai.timetracker.service;
+package reai.timetracker.service
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import reai.timetracker.entity.Employee;
-import reai.timetracker.entity.TimeEntry;
-import reai.timetracker.repository.TimeEntryRepository;
-
-import java.util.List;
-import java.util.Optional;
+import org.springframework.stereotype.Service
+import reai.timetracker.entity.Employee
+import reai.timetracker.entity.TimeEntry
+import reai.timetracker.repository.TimeEntryRepository
 
 @Service
-public class TimeTrackerService {
+class TimeTrackerService(
+    private val repository: TimeEntryRepository,
+    private val reaiApiService: ReaiApiService
+) {
 
-    @Autowired
-    private TimeEntryRepository repository;
-
-    @Autowired
-    private ReaiApiService reaiApiService;
-
-    public TimeEntry startTimer(String projectName, Long employeeId, Long tenantId) {
-        Employee employee = reaiApiService.getEmployee(employeeId, tenantId);
+    fun startTimer(projectName: String, employeeId: Long, tenantId: Long): TimeEntry {
+        val employee: Employee? = reaiApiService.getEmployee(employeeId, tenantId)
         if (employee == null) {
-            throw new SecurityException("Employee not found or access denied");
+            throw SecurityException("Employee not found or access denied")
         }
 
         repository.findByEmployeeIdAndEndTimeIsNullAndTenantId(employeeId, tenantId)
-                .ifPresent(this::stopActiveTimer);
+                .ifPresent { stopActiveTimer(it) }
 
-        TimeEntry entry = new TimeEntry(projectName, employeeId);
-        entry.setTenantId(tenantId);
-        return repository.save(entry);
-    }
-
-    public TimeEntry stopTimer(Long employeeId, Long tenantId) {
-        Optional<TimeEntry> activeEntry =
-                repository.findByEmployeeIdAndEndTimeIsNullAndTenantId(employeeId, tenantId);
-
-        if (activeEntry.isPresent()) {
-            TimeEntry entry = activeEntry.get();
-            entry.stop();
-            return repository.save(entry);
+        val entry = TimeEntry(projectName, employeeId).apply {
+            this.tenantId = tenantId
         }
-
-        return null;
+        return repository.save(entry)
     }
 
-    public Optional<TimeEntry> getCurrentTimer(Long employeeId, Long tenantId) {
-        return repository.findByEmployeeIdAndEndTimeIsNullAndTenantId(employeeId, tenantId);
+    fun stopTimer(employeeId: Long, tenantId: Long): TimeEntry? {
+        val activeEntry = repository.findByEmployeeIdAndEndTimeIsNullAndTenantId(employeeId, tenantId)
+        return if (activeEntry.isPresent) {
+            val entry = activeEntry.get()
+            entry.stop()
+            repository.save(entry)
+        } else {
+            null
+        }
     }
 
-    public List<TimeEntry> getTimeEntries(Long employeeId, Long tenantId) {
-        Employee employee = reaiApiService.getEmployee(employeeId, tenantId);
+    fun getCurrentTimer(employeeId: Long, tenantId: Long) =
+            repository.findByEmployeeIdAndEndTimeIsNullAndTenantId(employeeId, tenantId)
+
+    fun getTimeEntries(employeeId: Long, tenantId: Long): List<TimeEntry> {
+        val employee: Employee? = reaiApiService.getEmployee(employeeId, tenantId)
         if (employee == null) {
-            throw new SecurityException("Employee not found or access denied");
+            throw SecurityException("Employee not found or access denied")
         }
-
-        return repository.findByEmployeeIdAndTenantIdOrderByStartTimeDesc(employeeId, tenantId);
+        return repository.findByEmployeeIdAndTenantIdOrderByStartTimeDesc(employeeId, tenantId)
     }
 
-    public TimeEntry updateEntry(Long id, String description, Boolean billable, Long tenantId) {
+    fun updateEntry(id: Long, description: String?, billable: Boolean?, tenantId: Long): TimeEntry? {
         return repository.findByIdAndTenantId(id, tenantId)
-                .map(entry -> {
-                    if (description != null) entry.setDescription(description);
-                    if (billable != null) entry.setBillable(billable);
-                    entry.setSynced(false);
-                    return repository.save(entry);
-                })
-                .orElse(null);
+                .map { entry ->
+                description?.let { entry.description = it }
+            billable?.let { entry.billable = it }
+            entry.synced = false
+            repository.save(entry)
+        }
+            .orElse(null)
     }
 
-    public int syncUnsyncedEntries(Long tenantId) {
-        List<TimeEntry> unsyncedEntries = repository.findUnsyncedEntriesByTenantId(tenantId);
-        int syncedCount = 0;
-
-        for (TimeEntry entry : unsyncedEntries) {
+    fun syncUnsyncedEntries(tenantId: Long): Int {
+        val unsyncedEntries = repository.findUnsyncedEntriesByTenantId(tenantId)
+        var syncedCount = 0
+        for (entry in unsyncedEntries) {
             if (reaiApiService.syncTimeEntry(entry)) {
-                entry.setSynced(true);
-                repository.save(entry);
-                syncedCount++;
+                entry.synced = true
+                repository.save(entry)
+                syncedCount++
             }
         }
-
-        return syncedCount;
+        return syncedCount
     }
 
-    private void stopActiveTimer(TimeEntry entry) {
-        entry.stop();
-        repository.save(entry);
+    private fun stopActiveTimer(entry: TimeEntry) {
+        entry.stop()
+        repository.save(entry)
     }
 
-    public List<TimeEntry> getAllTimeEntries(Long tenantId) {
-        return repository.findByTenantIdOrderByStartTimeDesc(tenantId);
-    }
+    fun getAllTimeEntries(tenantId: Long): List<TimeEntry> =
+            repository.findByTenantIdOrderByStartTimeDesc(tenantId)
 }

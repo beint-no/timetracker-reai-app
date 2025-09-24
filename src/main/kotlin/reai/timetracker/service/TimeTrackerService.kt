@@ -20,7 +20,7 @@ class TimeTrackerService(
         repository.findByEmployeeIdAndEndTimeIsNullAndTenantId(employeeId, tenantId)
                 .ifPresent { stopActiveTimer(it) }
 
-        val entry = TimeEntry(projectName, employeeId).apply {
+        val entry = TimeEntry(employeeId, projectName).apply {
             this.tenantId = tenantId
         }
         return repository.save(entry)

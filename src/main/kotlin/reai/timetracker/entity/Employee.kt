@@ -24,3 +24,8 @@ data class Employee(
     val displayName: String
         get() = "$name ($email)"
 }
+
+data class EmployeesDto(
+    val id: Long?,
+    val name: String?,
+)

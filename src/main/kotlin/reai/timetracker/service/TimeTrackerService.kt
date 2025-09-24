@@ -2,6 +2,7 @@ package reai.timetracker.service
 
 import org.springframework.stereotype.Service
 import reai.timetracker.entity.Employee
+import reai.timetracker.entity.EmployeesDto
 import reai.timetracker.entity.TimeEntry
 import reai.timetracker.repository.TimeEntryRepository
 
@@ -12,7 +13,7 @@ class TimeTrackerService(
 ) {
 
     fun startTimer(projectName: String, employeeId: Long, tenantId: Long): TimeEntry {
-        val employee: Employee? = reaiApiService.getEmployee(employeeId, tenantId)
+        val employee: EmployeesDto? = reaiApiService.getEmployee(employeeId, tenantId)
         if (employee == null) {
             throw SecurityException("Employee not found or access denied")
         }
@@ -41,7 +42,7 @@ class TimeTrackerService(
             repository.findByEmployeeIdAndEndTimeIsNullAndTenantId(employeeId, tenantId)
 
     fun getTimeEntries(employeeId: Long, tenantId: Long): List<TimeEntry> {
-        val employee: Employee? = reaiApiService.getEmployee(employeeId, tenantId)
+        val employee: EmployeesDto? = reaiApiService.getEmployee(employeeId, tenantId)
         if (employee == null) {
             throw SecurityException("Employee not found or access denied")
         }

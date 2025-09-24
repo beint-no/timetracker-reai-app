@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import reai.timetracker.entity.Employee
+import reai.timetracker.entity.EmployeesDto
 import reai.timetracker.service.ReaiApiService
 
 @RestController
@@ -15,10 +16,10 @@ class EmployeeController(
     private val logger = LoggerFactory.getLogger(EmployeeController::class.java)
 
     @GetMapping
-    fun getEmployees(@RequestParam tenantId: Long): ResponseEntity<List<Employee>> {
+    fun getEmployees(@RequestParam(required = false) tenantId: Long?): ResponseEntity<List<EmployeesDto?>?>? {
         logger.debug("Fetching employees for user")
         return try {
-            val employees = reaiApiService.getEmployees(tenantId)
+            val employees = reaiApiService.getEmployees(5)
             logger.info("Fetched ${employees.size} employees for tenantId: $tenantId")
             ResponseEntity.ok(employees)
         } catch (e: IllegalStateException) {
@@ -27,6 +28,6 @@ class EmployeeController(
         } catch (e: Exception) {
             logger.error("Unexpected error fetching employees: ${e.message}")
             ResponseEntity.status(500).body(emptyList())
-        }
+        } as ResponseEntity<List<EmployeesDto?>?>?
     }
 }

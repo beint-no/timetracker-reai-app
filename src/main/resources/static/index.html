@@ -43,7 +43,7 @@
 
         .card {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            border-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
@@ -83,7 +83,7 @@
             font-weight: 600;
         }
 
-        #employee-select {
+        #employee-select, #tenant-select, #project-select {
             width: 100%;
             padding: 15px;
             border: 2px solid #e2e8f0;
@@ -91,9 +91,10 @@
             font-size: 16px;
             background: white;
             transition: all 0.3s ease;
+            margin-bottom: 15px;
         }
 
-        #employee-select:focus {
+        #employee-select:focus, #tenant-select:focus, #project-select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -469,6 +470,11 @@
     <div class="left-panel">
         <div class="card employee-section">
             <h3>Select Employee</h3>
+            <select id="tenant-select" onchange="loadEmployees()">
+                <option value="">-- Select Tenant --</option>
+                <option value="1">Tenant 1</option>
+                <option value="2">Tenant 2</option>
+            </select>
             <select id="employee-select" onchange="selectEmployee()">
                 <option value="">-- Select Employee --</option>
             </select>
@@ -485,9 +491,12 @@
             </div>
 
             <div class="timer-controls">
+                <select id="project-select">
+                    <option value="">-- Select Project --</option>
+                </select>
                 <input type="text"
                        id="project-name"
-                       placeholder="Enter project name..."
+                       placeholder="Or enter custom project name..."
                        maxlength="100">
                 <div class="button-group">
                     <button onclick="startTimer()" class="btn btn-start">▶ Start</button>
@@ -503,7 +512,9 @@
                 <h3>Time Entries</h3>
                 <button onclick="syncToReai()" class="btn btn-sync">🔄 Sync to ReAI</button>
             </div>
-            <div id="entries" class="entries-container"></div>
+            <div id="entries" class="entries-container">
+                <div style="text-align: center; color: #a0aec0; padding: 40px; font-size: 1.1rem;">📝 No time entries loaded</div>
+            </div>
         </div>
     </div>
 </div>
@@ -516,10 +527,21 @@
 <script>
     let selectedEmployeeId = null;
     let selectedEmployeeName = null;
+    let selectedTenantId = null;
     let durationInterval = null;
     let refreshInterval = null;
+    let isStarting = false;
+    let currentTimerData = null;
+
+    function getAccessTokenFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('access_token');
+    }
+    const accessToken = getAccessTokenFromUrl();
 
     document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('tenant-select').value = '1';
+        selectedTenantId = '1';
         loadEmployees();
 
         document.getElementById('project-name').addEventListener('keypress', function(e) {
@@ -527,15 +549,37 @@
                 startTimer();
             }
         });
+
+        document.getElementById('project-select').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('project-name').value = '';
+                document.getElementById('project-name').placeholder = 'Or enter custom project name...';
+            } else {
+                document.getElementById('project-name').placeholder = 'Enter project name...';
+            }
+        });
     });
 
     async function loadEmployees() {
+        const tenantSelect = document.getElementById('tenant-select');
+        selectedTenantId = tenantSelect.value;
+
+        if (!selectedTenantId) {
+            document.getElementById('employee-select').innerHTML = '<option value="">-- Select Employee --</option>';
+            return;
+        }
+
         try {
             showLoading(true);
-            const response = await fetch('/api/employees');
+
+            const params = new URLSearchParams({ tenantId: selectedTenantId });
+            if (accessToken) {
+                params.append('access_token', accessToken);
+            }
+            const response = await fetch(`/api/employees?${params.toString()}`);
 
             if (!response.ok) {
-                throw new Error('Failed to load employees');
+                throw new Error(`Failed to load employees: ${response.status} ${response.statusText}`);
             }
 
             const employees = await response.json();
@@ -543,87 +587,203 @@
 
             employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
 
-            employees.forEach(emp => {
-                const option = document.createElement('option');
-                option.value = emp.id;
-                option.textContent = emp.displayName || `${emp.name} (${emp.email})`;
-                employeeSelect.appendChild(option);
-            });
+            if (Array.isArray(employees) && employees.length > 0) {
+                employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.name} (${emp.email || 'No email'})`;
+                    option.dataset.name = emp.name;
+                    option.dataset.email = emp.email || '';
+                    option.dataset.department = emp.department || '';
+                    employeeSelect.appendChild(option);
+                });
+
+                showNotification(`Loaded ${employees.length} employees for tenant ${selectedTenantId}`, 'success');
+            } else {
+                showNotification(`No employees found for tenant ${selectedTenantId}`, 'error');
+            }
 
         } catch (error) {
             console.error('Error loading employees:', error);
-            showNotification('Failed to load employees. Please refresh the page.', 'error');
+            showNotification(`Failed to load employees: ${error.message}`, 'error');
         } finally {
             showLoading(false);
         }
     }
 
+    async function loadProjects() {
+        if (!selectedTenantId) return;
+
+        try {
+            const params = new URLSearchParams({ tenantId: selectedTenantId });
+            if (accessToken) {
+                params.append('access_token', accessToken);
+            }
+            const response = await fetch(`/api/employees/project?${params.toString()}`);
+
+            if (!response.ok) {
+                console.warn('Failed to load projects, using manual input only');
+                return;
+            }
+
+            const projects = await response.json();
+            const projectSelect = document.getElementById('project-select');
+
+            projectSelect.innerHTML = '<option value="">-- Select Project --</option>';
+
+            if (Array.isArray(projects) && projects.length > 0) {
+                projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.name;
+                    option.textContent = project.name;
+                    option.dataset.projectId = project.id;
+                    projectSelect.appendChild(option);
+                });
+
+                console.log(`Loaded ${projects.length} projects for tenant ${selectedTenantId}`);
+            }
+
+        } catch (error) {
+            console.warn('Error loading projects:', error.message);
+        }
+    }
+
     function selectEmployee() {
         const employeeSelect = document.getElementById('employee-select');
+        const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+
         selectedEmployeeId = employeeSelect.value;
-        selectedEmployeeName = employeeSelect.options[employeeSelect.selectedIndex].text;
+        selectedEmployeeName = selectedOption.dataset.name || selectedOption.text;
 
         const selectedEmployeeDiv = document.getElementById('selected-employee');
         const timerSection = document.getElementById('timer-section');
         const entriesSection = document.getElementById('entries-section');
 
         if (selectedEmployeeId) {
-            selectedEmployeeDiv.innerHTML = `<strong>Tracking time for:</strong> ${selectedEmployeeName}`;
+            const employeeInfo = `
+                <strong>Tracking time for:</strong> ${selectedEmployeeName}<br>
+                <small>Tenant: ${selectedTenantId} | Employee ID: ${selectedEmployeeId}</small>
+            `;
+
+            selectedEmployeeDiv.innerHTML = employeeInfo;
             selectedEmployeeDiv.style.display = 'block';
             timerSection.style.display = 'block';
             entriesSection.style.display = 'block';
 
-            loadCurrentTimer();
-            loadEntries();
-            startAutoRefresh();
+            loadProjects();
 
         } else {
             selectedEmployeeDiv.style.display = 'none';
             timerSection.style.display = 'none';
             entriesSection.style.display = 'none';
-            stopAutoRefresh();
+            stopTimerDisplay();
         }
     }
 
     async function startTimer() {
-        if (!selectedEmployeeId) {
-            showNotification('Please select an employee first', 'error');
+        if (isStarting) {
+            showNotification('Processing start request, please wait...', 'error');
             return;
         }
 
-        const project = document.getElementById('project-name').value.trim();
+        if (!selectedEmployeeId || !selectedTenantId) {
+            showNotification('Please select a tenant and employee first', 'error');
+            return;
+        }
+
+        const projectSelect = document.getElementById('project-select');
+        const projectTextInput = document.getElementById('project-name');
+
+        let project = projectSelect.value.trim();
         if (!project) {
-            showNotification('Please enter a project name', 'error');
-            document.getElementById('project-name').focus();
+            project = projectTextInput.value.trim();
+        }
+
+        if (!project) {
+            showNotification('Please select a project or enter a project name', 'error');
+            if (!projectSelect.value) {
+                projectTextInput.focus();
+            }
             return;
         }
 
         try {
-            const response = await fetch(`/api/time/start?projectName=${encodeURIComponent(project)}&employeeId=${selectedEmployeeId}`, {
-                method: 'POST'
+            isStarting = true;
+            showLoading(true);
+
+            const params = new URLSearchParams({
+                projectName: project,
+                employeeId: selectedEmployeeId,
+                tenantId: selectedTenantId
+            });
+            if (accessToken) {
+                params.append('access_token', accessToken);
+            }
+
+            const response = await fetch(`/api/time/start?${params.toString()}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
             if (!response.ok) {
-                throw new Error('Failed to start timer');
+                const errorText = await response.text();
+                throw new Error(`Failed to start timer: ${response.status} - ${errorText}`);
             }
 
-            document.getElementById('project-name').value = '';
-            loadCurrentTimer();
-            loadEntries();
-            showNotification('Timer started successfully!', 'success');
+            const result = await response.json();
+
+            currentTimerData = {
+                projectName: project,
+                startTime: result.startTime || new Date().toISOString(),
+                employeeName: selectedEmployeeName
+            };
+
+            displayRunningTimer(currentTimerData);
+
+            projectSelect.value = '';
+            projectTextInput.value = '';
+            projectTextInput.placeholder = 'Enter project name...';
+
+            showNotification(`Timer started successfully for ${project}!`, 'success');
 
         } catch (error) {
             console.error('Error starting timer:', error);
-            showNotification('Failed to start timer. Please try again.', 'error');
+            showNotification(`Failed to start timer: ${error.message}`, 'error');
+        } finally {
+            isStarting = false;
+            showLoading(false);
         }
     }
 
     async function stopTimer() {
-        if (!selectedEmployeeId) return;
+        if (!selectedEmployeeId || !selectedTenantId) {
+            showNotification('Please select a tenant and employee first', 'error');
+            return;
+        }
+
+        if (!currentTimerData) {
+            showNotification('No active timer found', 'error');
+            return;
+        }
 
         try {
-            const response = await fetch(`/api/time/stop?employeeId=${selectedEmployeeId}`, {
-                method: 'POST'
+            showLoading(true);
+
+            const params = new URLSearchParams({
+                employeeId: selectedEmployeeId,
+                tenantId: selectedTenantId
+            });
+            if (accessToken) {
+                params.append('access_token', accessToken);
+            }
+
+            const response = await fetch(`/api/time/stop?${params.toString()}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
             if (!response.ok) {
@@ -631,146 +791,57 @@
                     showNotification('No active timer found', 'error');
                     return;
                 }
-                throw new Error('Failed to stop timer');
+                const errorText = await response.text();
+                throw new Error(`Failed to stop timer: ${response.status} - ${errorText}`);
             }
 
             const entry = await response.json();
-            loadCurrentTimer();
-            loadEntries();
+
+            stopTimerDisplay();
 
             const duration = formatDuration(entry.startTime, entry.endTime);
-            showNotification(`Timer stopped! Duration: ${duration}`, 'success');
+            showNotification(`Timer stopped! Project: ${entry.projectName}, Duration: ${duration}. Auto-syncing...`, 'success');
 
         } catch (error) {
             console.error('Error stopping timer:', error);
-            showNotification('Failed to stop timer. Please try again.', 'error');
-        }
-    }
-
-    async function loadCurrentTimer() {
-        if (!selectedEmployeeId) return;
-
-        try {
-            const response = await fetch(`/api/time/current?employeeId=${selectedEmployeeId}`);
-
-            if (response.ok) {
-                const timer = await response.json();
-                displayCurrentTimer(timer);
-            } else if (response.status === 404) {
-                displayCurrentTimer(null);
-            }
-
-        } catch (error) {
-            console.error('Error loading current timer:', error);
-            displayCurrentTimer(null);
-        }
-    }
-
-    function displayCurrentTimer(timer) {
-        const currentTimerDiv = document.getElementById('current-timer');
-
-        if (timer) {
-            const duration = formatCurrentDuration(timer.startTime);
-            currentTimerDiv.innerHTML = `
-                    <div class="circular-timer">
-                        <div class="timer-circle pulse">
-                            <div class="timer-time" id="live-duration">${duration}</div>
-                        </div>
-                    </div>
-                    <div class="project-info">
-                        <div class="project-name">${timer.projectName}</div>
-                        <div class="start-time">Started: ${formatDateTime(timer.startTime)}</div>
-                    </div>
-                `;
-            startLiveDurationUpdate(timer.startTime);
-        } else {
-            currentTimerDiv.innerHTML = `
-                    <div class="inactive-timer">
-                        <div style="font-size: 3rem; margin-bottom: 10px;">⏰</div>
-                        <div>No active timer</div>
-                    </div>
-                `;
-            stopLiveDurationUpdate();
-        }
-    }
-
-    async function loadEntries() {
-        if (!selectedEmployeeId) return;
-
-        try {
-            const response = await fetch(`/api/time/entries?employeeId=${selectedEmployeeId}`);
-
-            if (!response.ok) {
-                throw new Error('Failed to load entries');
-            }
-
-            const entries = await response.json();
-            displayEntries(entries);
-
-        } catch (error) {
-            console.error('Error loading entries:', error);
-            document.getElementById('entries').innerHTML = '<div style="text-align: center; color: #f56565; padding: 20px;">Failed to load time entries</div>';
-        }
-    }
-
-    function displayEntries(entries) {
-        const entriesDiv = document.getElementById('entries');
-
-        if (entries.length === 0) {
-            entriesDiv.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 40px; font-size: 1.1rem;">📝 No time entries found</div>';
-            return;
-        }
-
-        const entriesHtml = entries.map(entry => {
-            const isActive = !entry.endTime;
-            const duration = isActive ?
-                formatCurrentDuration(entry.startTime) :
-                formatDuration(entry.startTime, entry.endTime);
-
-            return `
-                    <div class="entry ${isActive ? 'active' : ''}">
-                        <div class="entry-header">
-                            <div class="project-name-entry">${entry.projectName}</div>
-                            <div class="entry-status ${isActive ? 'status-running' : 'status-completed'}">
-                                ${isActive ? '▶ Running' : '✓ Completed'}
-                            </div>
-                        </div>
-                        <div class="entry-meta">
-                            <div><strong>Duration:</strong> <span class="duration">${duration}</span></div>
-                            <div><strong>Started:</strong> ${formatDateTime(entry.startTime)}</div>
-                            ${entry.endTime ? `<div><strong>Ended:</strong> ${formatDateTime(entry.endTime)}</div>` : ''}
-                            ${entry.description ? `<div><strong>Description:</strong> ${entry.description}</div>` : ''}
-                            <div><strong>Billable:</strong> ${entry.billable ? '✓ Yes' : '✗ No'} | <strong>Synced:</strong> ${entry.synced ? '✓ Yes' : '⏳ No'}</div>
-                        </div>
-                    </div>
-                `;
-        }).join('');
-
-        entriesDiv.innerHTML = entriesHtml;
-    }
-
-    async function syncToReai() {
-        try {
-            showLoading(true);
-
-            const response = await fetch('/api/time/sync', {
-                method: 'POST'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to sync entries');
-            }
-
-            const result = await response.text();
-            showNotification(result, 'success');
-            loadEntries();
-
-        } catch (error) {
-            console.error('Error syncing entries:', error);
-            showNotification('Failed to sync entries to ReAI', 'error');
+            showNotification(`Failed to stop timer: ${error.message}`, 'error');
         } finally {
             showLoading(false);
         }
+    }
+
+    function displayRunningTimer(timerData) {
+        const currentTimerDiv = document.getElementById('current-timer');
+        const startTime = new Date(timerData.startTime);
+
+        currentTimerDiv.innerHTML = `
+            <div class="circular-timer">
+                <div class="timer-circle pulse">
+                    <div class="timer-time" id="live-duration">00:00:00</div>
+                </div>
+            </div>
+            <div class="project-info">
+                <div class="project-name">${timerData.projectName}</div>
+                <div class="start-time">Started: ${formatDateTime(timerData.startTime)}</div>
+                <div class="start-time">Employee: ${timerData.employeeName}</div>
+            </div>
+        `;
+
+        startLiveDurationUpdate(startTime);
+    }
+
+    function stopTimerDisplay() {
+        const currentTimerDiv = document.getElementById('current-timer');
+
+        currentTimerDiv.innerHTML = `
+            <div class="inactive-timer">
+                <div style="font-size: 3rem; margin-bottom: 10px;">⏰</div>
+                <div>No active timer</div>
+            </div>
+        `;
+
+        stopLiveDurationUpdate();
+        currentTimerData = null;
     }
 
     function startLiveDurationUpdate(startTime) {
@@ -779,7 +850,14 @@
         durationInterval = setInterval(() => {
             const element = document.getElementById('live-duration');
             if (element) {
-                element.textContent = formatCurrentDuration(startTime);
+                const now = new Date();
+                const diff = Math.floor((now - startTime) / 1000);
+
+                const hours = Math.floor(diff / 3600);
+                const minutes = Math.floor((diff % 3600) / 60);
+                const seconds = diff % 60;
+
+                element.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             } else {
                 stopLiveDurationUpdate();
             }
@@ -790,20 +868,6 @@
         if (durationInterval) {
             clearInterval(durationInterval);
             durationInterval = null;
-        }
-    }
-
-    function startAutoRefresh() {
-        stopAutoRefresh();
-        refreshInterval = setInterval(() => {
-            loadCurrentTimer();
-        }, 30000);
-    }
-
-    function stopAutoRefresh() {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-            refreshInterval = null;
         }
     }
 
@@ -835,7 +899,10 @@
     }
 
     function showLoading(show) {
-        document.getElementById('loading').style.display = show ? 'flex' : 'none';
+        const loadingDiv = document.getElementById('loading');
+        if (loadingDiv) {
+            loadingDiv.style.display = show ? 'flex' : 'none';
+        }
     }
 
     function showNotification(message, type = 'success') {
@@ -857,9 +924,60 @@
         }, 3000);
     }
 
+    async function syncToReai() {
+        if (!selectedTenantId) {
+            showNotification('Please select a tenant first', 'error');
+            return;
+        }
+
+        try {
+            showLoading(true);
+
+            const params = new URLSearchParams({ tenantId: selectedTenantId });
+            if (accessToken) {
+                params.append('access_token', accessToken);
+            }
+
+            const response = await fetch(`/api/time/sync?${params.toString()}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to sync entries: ${response.status} - ${errorText}`);
+            }
+
+            const result = await response.text();
+            showNotification(result, 'success');
+
+        } catch (error) {
+            console.error('Error syncing entries:', error);
+            showNotification(`Failed to sync entries to ReAI: ${error.message}`, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    window.debugEmployees = async function() {
+        try {
+            const params = new URLSearchParams({ tenantId: '5' });
+            if (accessToken) {
+                params.append('access_token', accessToken);
+            }
+            const response = await fetch(`/api/employees?${params.toString()}`);
+            const data = await response.json();
+            console.log('Employees data:', data);
+            return data;
+        } catch (error) {
+            console.error('Debug error:', error);
+        }
+    };
+
     window.addEventListener('beforeunload', function() {
         stopLiveDurationUpdate();
-        stopAutoRefresh();
     });
 </script>
 </body>

@@ -1,45 +1,47 @@
 package reai.timetracker.entity
-
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import java.io.Serializable
-import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "time_entries")
-data class TimeEntry(
+class TimeEntry(
+    var projectName: String = "",
+    var employeeId: Long = 0,
+    tenantId: Long? = null
+) : Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    var id: Long? = null
 
     @Column(nullable = false)
-    var projectName: String = "",
+    var startTime: LocalDateTime = LocalDateTime.now()
 
-    @Column(nullable = false)
-    var startTime: LocalDateTime = LocalDateTime.now(),
-
-    var endTime: LocalDateTime? = null,
-
-    var description: String? = null,
-
-    @Column(nullable = false)
-    var employeeId: Long = 0,
+    var endTime: LocalDateTime? = null
+    var description: String? = null
 
     @Transient
-    var employeeName: String? = null,
+    var employeeName: String? = null
 
-    var billable: Boolean = true,
-
-    var synced: Boolean = false,
+    var billable: Boolean = true
+    var synced: Boolean = false
 
     @Column(name = "tenant_id")
-    var tenantId: Long? = null
+    var tenantId: Long? = tenantId
 
-) : Serializable {
+    @Column(name = "entry_date", nullable = false)
+    var entryDate: LocalDate = LocalDate.now()
 
-    val duration: Duration
-        get() = Duration.between(startTime, endTime ?: LocalDateTime.now())
+    constructor() : this("", 0, null)
+
+    constructor(employeeId: Long, projectName: String) : this(projectName, employeeId, null)
 
     fun stop() {
         endTime = LocalDateTime.now()
@@ -48,6 +50,15 @@ data class TimeEntry(
     val isActive: Boolean
         get() = endTime == null
 
-    val durationMinutes: Long
-        get() = duration.toMinutes()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TimeEntry) return false
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String {
+        return "TimeEntry(id=$id, projectName='$projectName', employeeId=$employeeId, entryDate=$entryDate)"
+    }
 }

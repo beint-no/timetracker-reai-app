@@ -3,13 +3,15 @@ package reai.timetracker.service
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import reai.timetracker.entity.EmployeesDto
 import reai.timetracker.entity.TimeEntry
+import reactor.core.publisher.Mono
 import java.time.LocalDateTime
-import java.time.ZoneId
 
 @Service
 class ReaiApiService(
@@ -24,53 +26,30 @@ class ReaiApiService(
     @Value("\${api.secret:your-very-long-api-secret}")
     private lateinit var apiSecret: String
 
-    fun getEmployees(tenantId: Long): List<EmployeesDto> {
-        logger.info("Fetching employees for tenantId=$tenantId from $reaiApiBaseUrl")
-        val response = try {
-            webClient.get()
-                .uri("$reaiApiBaseUrl/apps/tracker-time/list-employees?tenantId=$tenantId")
-                .header("X-Api-Secret", apiSecret)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(EmployeesDto::class.java)
-                .block()
-        } catch (e: Exception) {
-            logger.error("Error fetching employees: ${e.message}", e)
-            return emptyList()
-        }
-        logger.info("Raw response: $response")
-
+    fun getEmployees(tenantId: Long?, accessToken: String?): List<EmployeesDto> {
         return try {
-            webClient.get()
+            val employeesArray = webClient.get()
                 .uri("$reaiApiBaseUrl/apps/tracker-time/list-employees?tenantId=$tenantId")
-//                .header("X-Api-Secret", apiSecret)
+                .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToFlux(EmployeesDto::class.java)
-                .collectList()
-                .block() ?: emptyList()
+                .bodyToMono(Array<EmployeesDto>::class.java)
+                .block()
+
+            val employees = employeesArray?.toList() ?: emptyList()
+            employees
+
         } catch (e: Exception) {
-            logger.error("Error parsing employees: ${e.message}", e)
             emptyList()
-        }.also { employees ->
-            if (employees.isNotEmpty()) {
-                logger.info("Received ${employees.size} employees:")
-                employees.forEach { employee ->
-                    logger.info("Employee: ID=${employee.id}, Name=${employee.name}")
-                }
-            } else {
-                logger.warn("No employees found for tenantId=$tenantId")
-            }
         }
     }
 
-    fun getEmployees(): List<EmployeesDto> = getEmployees(1L)
 
     fun getEmployee(id: Long, tenantId: Long): EmployeesDto? {
         logger.info("Fetching employee ID=$id for tenantId=$tenantId from $reaiApiBaseUrl")
         val response = try {
             webClient.get()
-                .uri("$reaiApiBaseUrl/api/employees/$id?tenantId=$tenantId")
+                .uri("$reaiApiBaseUrl/apps/tracker-time/employee/$id/detail?tenantId=$tenantId")
                 .header("X-Api-Secret", apiSecret)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -84,7 +63,7 @@ class ReaiApiService(
 
         return try {
             webClient.get()
-                .uri("$reaiApiBaseUrl/api/employees/$id?tenantId=$tenantId")
+                .uri("$reaiApiBaseUrl/apps/tracker-time/employee/$id?tenantId=$tenantId")
                 .header("X-Api-Secret", apiSecret)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -103,45 +82,102 @@ class ReaiApiService(
 
     fun getEmployee(id: Long): EmployeesDto? = getEmployee(id, 1L)
 
-    fun syncTimeEntry(entry: TimeEntry): Boolean {
-        logger.info("Syncing time entry for employeeId=${entry.employeeId}, tenantId=${entry.tenantId}")
-        val reaiEntry = mapToReaiEntry(entry)
+
+    fun getProjects(tenantId: Long?, name: String?, accessToken: String?): List<ProjectDto?> {
+
         return try {
-            webClient.post()
-                .uri("$reaiApiBaseUrl/api/timesheet/entries?tenantId=${entry.tenantId}")
+            val projectsArray = webClient.get()
+                .uri("$reaiApiBaseUrl/apps/tracker-time/list-project?tenantId=$tenantId&name=$name")
+                .header("Authorization", accessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(Array<ProjectDto>::class.java)
+                .block()
+
+            val projects = projectsArray?.toList() ?: emptyList()
+            logger.info("Successfully received ${projects.size} projects")
+
+            projects
+
+        } catch (e: Exception) {
+            logger.error("Error fetching projects for tenantId=$tenantId: ${e.message}", e)
+            emptyList()
+        }
+    }
+
+    fun syncTimeEntry(entry: TimeEntry): Boolean {
+        logger.info("Syncing time entry ID=${entry.id} to ReAI platform")
+
+        return try {
+            val timesheetEntry = mapToReaiEntry(entry)
+
+            val response = webClient.post()
+                .uri("$reaiApiBaseUrl/apps/tracker-time/timesheet/create")
                 .header("X-Api-Secret", apiSecret)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(reaiEntry)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(timesheetEntry), TimesheetEntryDto::class.java)
                 .retrieve()
-                .toBodilessEntity()
+                .toEntity(String::class.java)
                 .block()
-            logger.info("Successfully synced time entry: employeeId=${entry.employeeId}, projectName=${entry.projectName}, startTime=${entry.startTime}")
-            true
+
+            val isSuccess = response?.statusCode == HttpStatus.OK || response?.statusCode == HttpStatus.CREATED
+
+            if (isSuccess) {
+                logger.info("Successfully synced entry ID=${entry.id} to ReAI platform")
+            } else {
+                logger.warn("Failed to sync entry ID=${entry.id}, status: ${response?.statusCode}")
+            }
+
+            isSuccess
+
+        } catch (e: WebClientResponseException) {
+            logger.error("HTTP error syncing entry ID=${entry.id}: ${e.statusCode} - ${e.responseBodyAsString}")
+            false
         } catch (e: Exception) {
-            logger.error("Error syncing time entry: ${e.message}", e)
+            logger.error("Failed to sync entry ID=${entry.id} to ReAI platform: ${e.message}", e)
             false
         }
     }
 
-    private fun mapToReaiEntry(entry: TimeEntry): TimesheetEntryDto =
-        TimesheetEntryDto(
+    private fun mapToReaiEntry(entry: TimeEntry): TimesheetEntryDto {
+        return TimesheetEntryDto(
             employeeId = entry.employeeId,
             projectName = entry.projectName,
-            startTime = entry.startTime?.atZone(ZoneId.of("Asia/Ho_Chi_Minh"))?.toLocalDateTime(),
-            endTime = entry.endTime?.atZone(ZoneId.of("Asia/Ho_Chi_Minh"))?.toLocalDateTime(),
+            startTime = entry.startTime,
+            endTime = entry.endTime,
             description = entry.description,
             billable = entry.billable,
             tenantId = entry.tenantId
         )
+    }
 
     data class TimesheetEntryDto(
-        @JsonProperty("employeeId") val employeeId: Long? = null,
-        @JsonProperty("projectName") val projectName: String? = null,
-        @JsonProperty("startTime") val startTime: LocalDateTime? = null,
-        @JsonProperty("endTime") val endTime: LocalDateTime? = null,
-        @JsonProperty("description") val description: String? = null,
-        @JsonProperty("billable") val billable: Boolean = true,
-        @JsonProperty("tenant_id") val tenantId: Long? = null
+        @JsonProperty("employeeId")
+        val employeeId: Long? = null,
+
+        @JsonProperty("projectName")
+        val projectName: String? = null,
+
+        @JsonProperty("startTime")
+        val startTime: LocalDateTime? = null,
+
+        @JsonProperty("endTime")
+        val endTime: LocalDateTime? = null,
+
+        @JsonProperty("description")
+        val description: String? = null,
+
+        @JsonProperty("billable")
+        val billable: Boolean = true,
+
+        @JsonProperty("tenantId")
+        val tenantId: Long? = null
     )
 
 }
+data class ProjectDto(
+    @JsonProperty("id") val id: Long,
+    @JsonProperty("name") val name: String,
+    @JsonProperty("tenantId") val tenantId: Long?
+)

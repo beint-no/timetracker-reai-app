@@ -21,7 +21,7 @@ CREATE TABLE time_entries
     synced       BOOLEAN   DEFAULT FALSE,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employees (id) ON DELETE CASCADE
+    entry_date DATE DEFAULT CURRENT_DATE
 );
 
 CREATE TABLE tenant_oauth_configs (

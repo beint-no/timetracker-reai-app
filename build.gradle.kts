@@ -38,7 +38,7 @@ dependencies {
 
     "implementation"("org.flywaydb:flyway-core:10.19.0")
     "implementation"("org.flywaydb:flyway-database-postgresql:10.19.0")
-    "runtimeOnly"("org.postgresql:postgresql:42.7.4")
+    "runtimeOnly"("org.postgresql:postgresql:42.7.8")
 
     "implementation"("io.jsonwebtoken:jjwt-api:0.11.5")
     "runtimeOnly"("io.jsonwebtoken:jjwt-impl:0.11.5")

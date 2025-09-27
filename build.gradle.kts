@@ -48,8 +48,8 @@ dependencies {
     "developmentOnly"("org.springframework.boot:spring-boot-devtools:3.5.6")
 
     "testImplementation"("org.springframework.boot:spring-boot-starter-test:3.5.6")
-    "testImplementation"("org.testcontainers:junit-jupiter:1.20.2")
-    "testImplementation"("org.testcontainers:postgresql:1.20.2")
+    "testImplementation"("org.testcontainers:junit-jupiter:1.21.3")
+    "testImplementation"("org.testcontainers:postgresql:1.21.3")
     "testImplementation"("org.springframework.boot:spring-boot-testcontainers:3.5.6")
 }
 

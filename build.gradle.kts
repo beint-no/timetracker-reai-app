@@ -26,7 +26,7 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 dependencies {
     "implementation"("org.jetbrains.kotlin:kotlin-reflect:2.2.20")
     "implementation"("org.jetbrains.kotlin:kotlin-stdlib:2.2.20")
-    "implementation"("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
+    "implementation"("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.0")
     "implementation"("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
 
     "implementation"("org.springframework.boot:spring-boot-starter-web:3.5.6")

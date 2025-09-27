@@ -6,6 +6,5 @@ import reai.timetracker.entity.Employee
 
 @Repository
 interface EmployeeRepository : JpaRepository<Employee, Long> {
-    fun findByTenantId(tenantId: Long): List<Employee>
     fun findByNameContainingIgnoreCase(name: String): List<Employee>
 }

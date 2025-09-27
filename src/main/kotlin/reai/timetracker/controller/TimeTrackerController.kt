@@ -17,13 +17,15 @@ class TimeTrackerController(
 
     @PostMapping("/start")
     fun startTimer(
-        @RequestParam projectName: String,
+        @RequestParam projectId: Long,
         @RequestParam employeeId: Long,
-        @RequestParam tenantId: Long
+        @RequestParam(required = false) access_token: String?,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String?
     ): ResponseEntity<TimeEntry> {
-        logger.debug("Starting timer for project: {}, employeeId: {}, tenantId: {}", projectName, employeeId, tenantId)
         return try {
-            val entry = timeTrackerService.startTimer(projectName, employeeId, tenantId)
+            val token = extractToken(access_token, authHeader)
+
+            val entry = timeTrackerService.startTimer(projectId, employeeId)
             ResponseEntity.ok(entry)
         } catch (e: Exception) {
             logger.error("Failed to start timer: {}", e.message)
@@ -34,26 +36,24 @@ class TimeTrackerController(
     @PostMapping("/stop")
     fun stopTimer(
         @RequestParam employeeId: Long,
-        @RequestParam tenantId: Long
+        @RequestParam projectId: Long,
+        @RequestParam(required = false) access_token: String?,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String?
     ): ResponseEntity<TimeEntry> {
-        logger.debug("Stopping timer for employeeId: {}, tenantId: {}", employeeId, tenantId)
         return try {
-            val entry = timeTrackerService.stopTimer(employeeId, tenantId)
+            val token = extractToken(access_token, authHeader)
+            val tenantId = extractTenantIdFromToken(token)
+
+            val entry = timeTrackerService.stopTimer(employeeId, token)
 
             if (entry != null) {
-                logger.info("Timer stopped successfully for employeeId: {}, tenantId: {}", employeeId, tenantId)
-
-                try {
-                    val syncedCount = timeTrackerService.syncTodayAggregated(tenantId, 1)
-                    logger.info("Auto-sync completed: {} entries synced for tenantId: {}", syncedCount, tenantId)
-                } catch (syncException: Exception) {
-                    logger.warn("Auto-sync failed after stopping timer: {}", syncException.message)
-                }
-
+                val syncedCount = timeTrackerService.syncTodayAggregated(employeeId, projectId, token)
+                logger.info("Auto-sync completed: {} entries synced for tenantId: {}", syncedCount, tenantId)
                 ResponseEntity.ok(entry)
             } else {
-                logger.warn("No active timer found for employeeId: {}, tenantId: {}", employeeId, tenantId)
-                ResponseEntity.notFound().build()
+                val newEntry = timeTrackerService.createInstantEntry(employeeId, projectId, token)
+                logger.warn("No active timer to stop; created instant entry {} for tenantId: {}", newEntry.id, tenantId)
+                ResponseEntity.ok(newEntry)
             }
         } catch (e: Exception) {
             logger.error("Failed to stop timer: {}", e.message)
@@ -64,11 +64,10 @@ class TimeTrackerController(
     @GetMapping("/current")
     fun getCurrentTimer(
         @RequestParam employeeId: Long,
-        @RequestParam tenantId: Long
     ): ResponseEntity<TimeEntry> {
-        logger.debug("Getting current timer for employeeId: {}, tenantId: {}", employeeId, tenantId)
+        logger.debug("Getting current timer for employeeId: {}", employeeId)
         return try {
-            timeTrackerService.getCurrentTimer(employeeId, tenantId)
+            timeTrackerService.getCurrentTimer(employeeId)
                 .map { ResponseEntity.ok(it) }
                 .orElse(ResponseEntity.notFound().build())
         } catch (e: Exception) {
@@ -80,11 +79,13 @@ class TimeTrackerController(
     @GetMapping("/entries")
     fun getTimeEntries(
         @RequestParam employeeId: Long,
-        @RequestParam tenantId: Long
+        @RequestParam(required = false) access_token: String?,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String?
+
     ): ResponseEntity<List<TimeEntry>> {
-        logger.debug("Getting time entries for employeeId: {}, tenantId: {}", employeeId, tenantId)
         return try {
-            val entries = timeTrackerService.getTimeEntries(employeeId, tenantId)
+            val token = extractToken(access_token, authHeader)
+            val entries = timeTrackerService.getTimeEntries(employeeId, token)
             ResponseEntity.ok(entries)
         } catch (e: Exception) {
             logger.error("Failed to get time entries: {}", e.message)
@@ -95,13 +96,11 @@ class TimeTrackerController(
     @PutMapping("/entries/{id}")
     fun updateEntry(
         @PathVariable id: Long,
-        @RequestParam(required = false) description: String?,
-        @RequestParam(required = false) billable: Boolean?,
         @RequestParam tenantId: Long
     ): ResponseEntity<TimeEntry> {
-        logger.debug("Updating time entry with id: {}, tenantId: {}", id, tenantId)
+        logger.debug("Updating time entry with id: {}", id)
         return try {
-            val updated = timeTrackerService.updateEntry(id, description, billable, tenantId)
+            val updated = timeTrackerService.updateEntry(id)
             if (updated != null) ResponseEntity.ok(updated) else ResponseEntity.notFound().build()
         } catch (e: Exception) {
             logger.error("Failed to update time entry: {}", e.message)
@@ -110,10 +109,15 @@ class TimeTrackerController(
     }
 
     @PostMapping("/sync")
-    fun syncToReai(@RequestParam tenantId: Long): ResponseEntity<String> {
-        logger.debug("Syncing time entries to ReAI for tenantId: {}", tenantId)
+    fun syncToReai(
+        @RequestParam employeeId: Long,
+        @RequestParam(required = false) access_token: String?,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String?
+    ): ResponseEntity<String> {
         return try {
-            val synced = timeTrackerService.syncTodayAggregated(tenantId, 1)
+            val token = extractToken(access_token, authHeader)
+
+            val synced = timeTrackerService.syncTodayAllDataAggregated(employeeId, token)
             ResponseEntity.ok("Synced $synced entries to ReAI")
         } catch (e: Exception) {
             logger.error("Failed to sync time entries: {}", e.message)
@@ -133,8 +137,27 @@ class TimeTrackerController(
         }
     }
 
-    data class TenantDto(
-        val id: Long,
-        val name: String
-    )
+    private fun extractToken(queryToken: String?, authHeader: String?): String? {
+        return when {
+            authHeader?.startsWith("Bearer ") == true ->
+                return authHeader
+            else -> null
+        }
+    }
+
+    private fun extractTenantIdFromToken(token: String?): Long {
+        try {
+            val payloadJson = String(
+                java.util.Base64.getUrlDecoder().decode(token?.split(".")[1]),
+                Charsets.UTF_8
+            )
+            val payload = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
+                .readTree(payloadJson)
+            return payload["tenantId"]?.asLong()
+                ?: throw IllegalStateException("tenantId not found in token")
+        } catch (e: Exception) {
+            throw IllegalStateException("Invalid token format: ${e.message}")
+        }
+    }
+
 }

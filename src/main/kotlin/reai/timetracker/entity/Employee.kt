@@ -7,8 +7,11 @@ import java.io.Serializable
 @Table(name = "employees")
 data class Employee(
 
+
     @Id
-    var id: Long? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    var id: Long = -1,
 
     @Column(nullable = false)
     var name: String = "",
@@ -16,10 +19,6 @@ data class Employee(
     @Column(nullable = false, unique = true)
     var email: String = "",
 
-    var department: String? = null,
-
-    @Column(name = "tenant_id")
-    var tenantId: Long? = null
 ) : Serializable {
     val displayName: String
         get() = "$name ($email)"

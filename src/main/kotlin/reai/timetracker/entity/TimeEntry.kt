@@ -11,37 +11,47 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "time_entries")
-class TimeEntry(
-    var projectName: String = "",
-    var employeeId: Long = 0,
-    tenantId: Long? = null
-) : Serializable {
+class TimeEntry : Serializable {
+
+    constructor()
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     var id: Long? = null
 
     @Column(nullable = false)
     var startTime: LocalDateTime = LocalDateTime.now()
 
     var endTime: LocalDateTime? = null
-    var description: String? = null
 
-    @Transient
-    var employeeName: String? = null
-
-    var billable: Boolean = true
     var synced: Boolean = false
-
-    @Column(name = "tenant_id")
-    var tenantId: Long? = tenantId
 
     @Column(name = "entry_date", nullable = false)
     var entryDate: LocalDate = LocalDate.now()
 
-    constructor() : this("", 0, null)
+    @Column(name = "start_time_millis")
+    var startTimeMillis: Long? = null
 
-    constructor(employeeId: Long, projectName: String) : this(projectName, employeeId, null)
+    @Column(name = "end_time_millis")
+    var endTimeMillis: Long? = null
+
+    @Column(name = "total_hours")
+    var totalHours: Double? = null
+
+    @Column(name = "total_milliseconds")
+    var totalMilliseconds: Long? = null
+
+    @Column(nullable = false)
+    var projectId: Long = 0
+
+    @Column(nullable = false)
+    var employeeId: Long = 0
+
+    constructor(employeeId: Long, projectId: Long) : this() {
+        this.employeeId = employeeId
+        this.projectId = projectId
+    }
 
     fun stop() {
         endTime = LocalDateTime.now()
@@ -50,15 +60,4 @@ class TimeEntry(
     val isActive: Boolean
         get() = endTime == null
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is TimeEntry) return false
-        return id != null && id == other.id
-    }
-
-    override fun hashCode(): Int = javaClass.hashCode()
-
-    override fun toString(): String {
-        return "TimeEntry(id=$id, projectName='$projectName', employeeId=$employeeId, entryDate=$entryDate)"
-    }
 }

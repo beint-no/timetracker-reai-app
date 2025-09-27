@@ -17,12 +17,12 @@ class EmployeeController(
 
     @GetMapping
     fun getEmployees(
-        @RequestParam(required = false) tenantId: Long?,
-        @RequestParam(required = false) access_token: String?
+        @RequestParam(required = false) access_token: String?,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String?
     ): ResponseEntity<List<EmployeesDto>> {
         return try {
-            logger.info("Fetching employees for tenantId: $tenantId with access_token: $access_token")
-            val employees = reaiApiService.getEmployees(tenantId, access_token)
+            val token = extractToken(access_token, authHeader)
+            val employees = reaiApiService.getEmployees( token)
             ResponseEntity.ok(employees)
         } catch (e: IllegalStateException) {
             logger.error("Unauthorized access: ${e.message}")
@@ -33,15 +33,36 @@ class EmployeeController(
         }
     }
 
-    @GetMapping(value = ["/project"], params = ["tenantId"])
+    @GetMapping("/{id}")
+    fun getEmployee(
+        @PathVariable id: Long,
+        @RequestParam(required = false) access_token: String?,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String?
+    ): ResponseEntity<EmployeesDto> {
+        return try {
+            val token = extractToken(access_token, authHeader)
+            val employee = reaiApiService.getEmployee(id, token)
+            if (employee != null) ResponseEntity.ok(employee)
+            else ResponseEntity.notFound().build()
+        } catch (e: IllegalStateException) {
+            logger.error("Unauthorized access: ${e.message}")
+            ResponseEntity.status(401).build()
+        } catch (e: Exception) {
+            logger.error("Error fetching employee $id: ${e.message}")
+            ResponseEntity.status(500).build()
+        }
+    }
+
+
+    @GetMapping("/project")
     fun getProjects(
-        @RequestParam(required = false) tenantId: Long?,
         @RequestParam(required = false) name: String?,
-        @RequestParam(required = false) access_token: String?
+        @RequestParam(required = false) access_token: String?,
+        @RequestHeader(value = "Authorization", required = false) authHeader: String?
     ): ResponseEntity<List<ProjectDto>> {
         return try {
-            logger.info("Fetching projects for tenantId: $tenantId, name: $name, access_token: $access_token")
-            val projects = reaiApiService.getProjects(tenantId, name, access_token)
+            val token = extractToken(access_token, authHeader)
+            val projects = reaiApiService.getProjects(name, token)
             ResponseEntity.ok(projects)
         } catch (e: IllegalStateException) {
             logger.error("Unauthorized access: ${e.message}")
@@ -49,6 +70,15 @@ class EmployeeController(
         } catch (e: Exception) {
             logger.error("Error fetching projects: ${e.message}")
             ResponseEntity.status(500).body(emptyList())
-        } as ResponseEntity<List<ProjectDto>>
+        }
+    }
+
+
+    private fun extractToken(queryToken: String?, authHeader: String?): String? {
+        return when {
+            authHeader?.startsWith("Bearer ") == true ->
+                return authHeader
+            else -> null
+        }
     }
 }

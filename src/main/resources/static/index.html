@@ -43,7 +43,7 @@
 
         .card {
             background: rgba(255, 255, 255, 0.95);
-            border-filter: blur(10px);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
@@ -260,6 +260,17 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
+        .btn-logout {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -401,7 +412,7 @@
 
         .notification {
             position: fixed;
-            top: 20px;
+            top: 80px;
             right: 20px;
             padding: 15px 20px;
             border-radius: 10px;
@@ -410,6 +421,8 @@
             z-index: 1000;
             transform: translateX(400px);
             transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
         }
 
         .notification.show {
@@ -422,6 +435,27 @@
 
         .notification.error {
             background: linear-gradient(135deg, #f56565, #e53e3e);
+        }
+
+        .token-status {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 999;
+        }
+
+        .token-status.valid {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .token-status.invalid {
+            background: #fed7d7;
+            color: #c53030;
         }
 
         @media (max-width: 768px) {
@@ -457,10 +491,20 @@
             .timer-time {
                 font-size: 1.5rem;
             }
+
+            .btn-logout, .token-status {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 10px 0;
+            }
         }
     </style>
 </head>
 <body>
+<button onclick="logout()" class="btn btn-logout">Logout</button>
+<div id="token-status" class="token-status"></div>
+
 <div class="header">
     <h1>ReAI Time Tracker</h1>
     <p>Track your time with style and sync with ReAI platform</p>
@@ -470,11 +514,6 @@
     <div class="left-panel">
         <div class="card employee-section">
             <h3>Select Employee</h3>
-            <select id="tenant-select" onchange="loadEmployees()">
-                <option value="">-- Select Tenant --</option>
-                <option value="1">Tenant 1</option>
-                <option value="2">Tenant 2</option>
-            </select>
             <select id="employee-select" onchange="selectEmployee()">
                 <option value="">-- Select Employee --</option>
             </select>
@@ -496,8 +535,9 @@
                 </select>
                 <input type="text"
                        id="project-name"
-                       placeholder="Or enter custom project name..."
-                       maxlength="100">
+                       placeholder="Select a project from the list"
+                       maxlength="100"
+                       disabled>
                 <div class="button-group">
                     <button onclick="startTimer()" class="btn btn-start">▶ Start</button>
                     <button onclick="stopTimer()" class="btn btn-stop">⏸ Stop</button>
@@ -525,83 +565,173 @@
 </div>
 
 <script>
+    // Token Management
+    class TokenManager {
+        static saveToken(token) {
+            try {
+                localStorage.setItem('reai_access_token', token);
+                this.updateTokenStatus();
+                console.log('Token saved to localStorage');
+            } catch (error) {
+                console.error('Failed to save token:', error);
+            }
+        }
+
+        static getToken() {
+            const storedToken = localStorage.getItem('reai_access_token');
+            if (storedToken && !this.isTokenExpired(storedToken)) {
+                return storedToken;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('access_token');
+
+            if (urlToken && !this.isTokenExpired(urlToken)) {
+                this.saveToken(urlToken);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return urlToken;
+            }
+
+            if (storedToken) {
+                this.clearToken();
+            }
+
+            return null;
+        }
+
+        static clearToken() {
+            localStorage.removeItem('reai_access_token');
+            this.updateTokenStatus();
+            console.log('Token cleared from localStorage');
+        }
+
+        static isTokenExpired(token) {
+            if (!token) return true;
+
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const expiry = payload.exp * 1000;
+                const isExpired = Date.now() >= expiry;
+
+                if (isExpired) {
+                    console.log('Token is expired');
+                }
+
+                return isExpired;
+            } catch (error) {
+                console.error('Invalid token format:', error);
+                return true;
+            }
+        }
+
+        static updateTokenStatus() {
+            const statusElement = document.getElementById('token-status');
+            const token = this.getToken();
+
+            if (token) {
+                statusElement.textContent = 'Token: Valid';
+                statusElement.className = 'token-status valid';
+            } else {
+                statusElement.textContent = 'Token: Invalid/Missing';
+                statusElement.className = 'token-status invalid';
+            }
+        }
+
+        static getTokenPayload(token) {
+            try {
+                return JSON.parse(atob(token.split('.')[1]));
+            } catch (error) {
+                return null;
+            }
+        }
+    }
+
+    // API Client
+    class APIClient {
+        static async makeRequest(url, options = {}) {
+            const token = TokenManager.getToken();
+
+            if (!token) {
+                throw new Error('No valid access token available. Please login again.');
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+
+            if (response.status === 401) {
+                TokenManager.clearToken();
+                showNotification('Authentication failed. Please login again.', 'error');
+                throw new Error('Authentication failed');
+            }
+
+            return response;
+        }
+
+        static async get(url) {
+            return this.makeRequest(url, { method: 'GET' });
+        }
+
+        static async post(url, data = null) {
+            const options = { method: 'POST' };
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            return this.makeRequest(url, options);
+        }
+    }
+
     let selectedEmployeeId = null;
     let selectedEmployeeName = null;
-    let selectedTenantId = null;
     let durationInterval = null;
-    let refreshInterval = null;
     let isStarting = false;
     let currentTimerData = null;
 
-    function getAccessTokenFromUrl() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('access_token');
-    }
-    const accessToken = getAccessTokenFromUrl();
-
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('tenant-select').value = '1';
-        selectedTenantId = '1';
-        loadEmployees();
+        TokenManager.updateTokenStatus();
 
-        document.getElementById('project-name').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                startTimer();
-            }
-        });
-
-        document.getElementById('project-select').addEventListener('change', function() {
-            if (this.value) {
-                document.getElementById('project-name').value = '';
-                document.getElementById('project-name').placeholder = 'Or enter custom project name...';
-            } else {
-                document.getElementById('project-name').placeholder = 'Enter project name...';
-            }
-        });
-    });
-
-    async function loadEmployees() {
-        const tenantSelect = document.getElementById('tenant-select');
-        selectedTenantId = tenantSelect.value;
-
-        if (!selectedTenantId) {
-            document.getElementById('employee-select').innerHTML = '<option value="">-- Select Employee --</option>';
+        const token = TokenManager.getToken();
+        if (!token) {
+            showNotification('No access token found. Please login first.', 'error');
             return;
         }
+
+        loadEmployees();
+
+        document.getElementById('project-select').addEventListener('change', function() {
+            const projectInput = document.getElementById('project-name');
+            if (projectInput) {
+                projectInput.value = '';
+            }
+        });
+
+        setInterval(() => {
+            TokenManager.updateTokenStatus();
+        }, 30000);
+    });
+
+    // Employee Management
+    async function loadEmployees() {
+        document.getElementById('employee-select').innerHTML = '<option value="">-- Select Employee --</option>';
 
         try {
             showLoading(true);
 
-            const params = new URLSearchParams({ tenantId: selectedTenantId });
-            if (accessToken) {
-                params.append('access_token', accessToken);
-            }
-            const response = await fetch(`/api/employees?${params.toString()}`);
+            const response = await APIClient.get(`/api/employees`);
 
             if (!response.ok) {
                 throw new Error(`Failed to load employees: ${response.status} ${response.statusText}`);
             }
 
             const employees = await response.json();
-            const employeeSelect = document.getElementById('employee-select');
-
-            employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
-
-            if (Array.isArray(employees) && employees.length > 0) {
-                employees.forEach(emp => {
-                    const option = document.createElement('option');
-                    option.value = emp.id;
-                    option.textContent = `${emp.name} (${emp.email || 'No email'})`;
-                    option.dataset.name = emp.name;
-                    option.dataset.email = emp.email || '';
-                    option.dataset.department = emp.department || '';
-                    employeeSelect.appendChild(option);
-                });
-
-                showNotification(`Loaded ${employees.length} employees for tenant ${selectedTenantId}`, 'success');
-            } else {
-                showNotification(`No employees found for tenant ${selectedTenantId}`, 'error');
-            }
+            populateEmployeeSelect(employees);
 
         } catch (error) {
             console.error('Error loading employees:', error);
@@ -611,40 +741,23 @@
         }
     }
 
-    async function loadProjects() {
-        if (!selectedTenantId) return;
+    function populateEmployeeSelect(employees) {
+        const employeeSelect = document.getElementById('employee-select');
+        employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
 
-        try {
-            const params = new URLSearchParams({ tenantId: selectedTenantId });
-            if (accessToken) {
-                params.append('access_token', accessToken);
-            }
-            const response = await fetch(`/api/employees/project?${params.toString()}`);
-
-            if (!response.ok) {
-                console.warn('Failed to load projects, using manual input only');
-                return;
-            }
-
-            const projects = await response.json();
-            const projectSelect = document.getElementById('project-select');
-
-            projectSelect.innerHTML = '<option value="">-- Select Project --</option>';
-
-            if (Array.isArray(projects) && projects.length > 0) {
-                projects.forEach(project => {
-                    const option = document.createElement('option');
-                    option.value = project.name;
-                    option.textContent = project.name;
-                    option.dataset.projectId = project.id;
-                    projectSelect.appendChild(option);
-                });
-
-                console.log(`Loaded ${projects.length} projects for tenant ${selectedTenantId}`);
-            }
-
-        } catch (error) {
-            console.warn('Error loading projects:', error.message);
+        if (Array.isArray(employees) && employees.length > 0) {
+            employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = `${emp.name} (${emp.email || 'No email'})`;
+                option.dataset.name = emp.name;
+                option.dataset.email = emp.email || '';
+                option.dataset.department = emp.department || '';
+                employeeSelect.appendChild(option);
+            });
+            showNotification(`Loaded ${employees.length} employees`, 'success');
+        } else {
+            showNotification(`No employees found`, 'error');
         }
     }
 
@@ -662,7 +775,7 @@
         if (selectedEmployeeId) {
             const employeeInfo = `
                 <strong>Tracking time for:</strong> ${selectedEmployeeName}<br>
-                <small>Tenant: ${selectedTenantId} | Employee ID: ${selectedEmployeeId}</small>
+                <small> Employee ID: ${selectedEmployeeId}</small>
             `;
 
             selectedEmployeeDiv.innerHTML = employeeInfo;
@@ -671,7 +784,6 @@
             entriesSection.style.display = 'block';
 
             loadProjects();
-
         } else {
             selectedEmployeeDiv.style.display = 'none';
             timerSection.style.display = 'none';
@@ -680,30 +792,56 @@
         }
     }
 
+    // Project Management
+    async function loadProjects() {
+        try {
+            const response = await APIClient.get(`/api/employees/project`);
+
+            if (!response.ok) {
+                console.warn('Failed to load projects, using manual input only');
+                return;
+            }
+
+            const projects = await response.json();
+            populateProjectSelect(projects);
+
+        } catch (error) {
+            console.warn('Error loading projects:', error.message);
+        }
+    }
+
+    function populateProjectSelect(projects) {
+        const projectSelect = document.getElementById('project-select');
+        projectSelect.innerHTML = '<option value="">-- Select Project --</option>';
+
+        if (Array.isArray(projects) && projects.length > 0) {
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.name;
+                option.textContent = project.name;
+                option.dataset.projectId = project.id;
+                projectSelect.appendChild(option);
+            });
+
+            console.log(`Loaded ${projects.length} projects`);
+        }
+    }
+
+    // Timer Management
     async function startTimer() {
         if (isStarting) {
             showNotification('Processing start request, please wait...', 'error');
             return;
         }
 
-        if (!selectedEmployeeId || !selectedTenantId) {
-            showNotification('Please select a tenant and employee first', 'error');
+        if (!selectedEmployeeId) {
+            showNotification('Please select an employee first', 'error');
             return;
         }
 
-        const projectSelect = document.getElementById('project-select');
-        const projectTextInput = document.getElementById('project-name');
-
-        let project = projectSelect.value.trim();
-        if (!project) {
-            project = projectTextInput.value.trim();
-        }
-
-        if (!project) {
-            showNotification('Please select a project or enter a project name', 'error');
-            if (!projectSelect.value) {
-                projectTextInput.focus();
-            }
+        const projectData = await getSelectedProject();
+        if (!projectData || !projectData.projectId) {
+            showNotification('Please select a project from the list', 'error');
             return;
         }
 
@@ -711,21 +849,8 @@
             isStarting = true;
             showLoading(true);
 
-            const params = new URLSearchParams({
-                projectName: project,
-                employeeId: selectedEmployeeId,
-                tenantId: selectedTenantId
-            });
-            if (accessToken) {
-                params.append('access_token', accessToken);
-            }
-
-            const response = await fetch(`/api/time/start?${params.toString()}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const url = `/api/time/start?projectId=${encodeURIComponent(projectData.projectId)}&employeeId=${selectedEmployeeId}`;
+            const response = await APIClient.post(url);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -733,33 +858,55 @@
             }
 
             const result = await response.json();
-
-            currentTimerData = {
-                projectName: project,
-                startTime: result.startTime || new Date().toISOString(),
-                employeeName: selectedEmployeeName
-            };
-
-            displayRunningTimer(currentTimerData);
-
-            projectSelect.value = '';
-            projectTextInput.value = '';
-            projectTextInput.placeholder = 'Enter project name...';
-
-            showNotification(`Timer started successfully for ${project}!`, 'success');
+            handleTimerStarted(projectData, result);
 
         } catch (error) {
             console.error('Error starting timer:', error);
-            showNotification(`Failed to start timer: ${error.message}`, 'error');
         } finally {
             isStarting = false;
             showLoading(false);
         }
     }
 
+    async function getSelectedProject() {
+        const projectSelect = document.getElementById('project-select');
+        const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+
+        if (selectedOption && selectedOption.dataset.projectId) {
+            return {
+                projectId: selectedOption.dataset.projectId,
+                projectName: selectedOption.textContent || projectSelect.value
+            };
+        }
+
+        showNotification('Please select a project from the list', 'error');
+        return null;
+    }
+
+    function handleTimerStarted(projectData, result) {
+        currentTimerData = {
+            projectId: projectData.projectId,
+            projectName: projectData.projectName,
+            startTime: result.startTime || new Date().toISOString(),
+            employeeName: selectedEmployeeName
+        };
+
+        displayRunningTimer(currentTimerData);
+        clearProjectInputs();
+        showNotification(`Timer started successfully for ${projectData.projectName}!`, 'success');
+    }
+
+    function clearProjectInputs() {
+        document.getElementById('project-select').value = '';
+        const projectInput = document.getElementById('project-name');
+        if (projectInput) {
+            projectInput.value = '';
+        }
+    }
+
     async function stopTimer() {
-        if (!selectedEmployeeId || !selectedTenantId) {
-            showNotification('Please select a tenant and employee first', 'error');
+        if (!selectedEmployeeId) {
+            showNotification('Please select an employee first', 'error');
             return;
         }
 
@@ -770,22 +917,20 @@
 
         try {
             showLoading(true);
-
-            const params = new URLSearchParams({
-                employeeId: selectedEmployeeId,
-                tenantId: selectedTenantId
-            });
-            if (accessToken) {
-                params.append('access_token', accessToken);
+            const token = TokenManager.getToken();
+            if (!token) {
+                showNotification('No access token available', 'error');
+                return;
             }
 
-            const response = await fetch(`/api/time/stop?${params.toString()}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const projectId = currentTimerData.projectId;
+            if (!projectId) {
+                showNotification('Unable to determine current project. Please restart the timer.', 'error');
+                return;
+            }
 
+            const url = `/api/time/stop?employeeId=${selectedEmployeeId}&projectId=${encodeURIComponent(projectId)}`;
+            const response = await APIClient.post(url);
             if (!response.ok) {
                 if (response.status === 404) {
                     showNotification('No active timer found', 'error');
@@ -796,11 +941,7 @@
             }
 
             const entry = await response.json();
-
-            stopTimerDisplay();
-
-            const duration = formatDuration(entry.startTime, entry.endTime);
-            showNotification(`Timer stopped! Project: ${entry.projectName}, Duration: ${duration}. Auto-syncing...`, 'success');
+            handleTimerStopped(entry);
 
         } catch (error) {
             console.error('Error stopping timer:', error);
@@ -810,6 +951,13 @@
         }
     }
 
+    function handleTimerStopped(entry) {
+        stopTimerDisplay();
+        const duration = formatDuration(entry.startTime, entry.endTime);
+        showNotification(`Timer stopped! Project: ${entry.projectName}, Duration: ${duration}`, 'success');
+    }
+
+    // Timer Display
     function displayRunningTimer(timerData) {
         const currentTimerDiv = document.getElementById('current-timer');
         const startTime = new Date(timerData.startTime);
@@ -871,79 +1019,23 @@
         }
     }
 
-    function formatCurrentDuration(startTime) {
-        const start = new Date(startTime);
-        const now = new Date();
-        const diff = Math.floor((now - start) / 1000);
-
-        const hours = Math.floor(diff / 3600);
-        const minutes = Math.floor((diff % 3600) / 60);
-        const seconds = diff % 60;
-
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    function formatDuration(startTime, endTime) {
-        const start = new Date(startTime);
-        const end = new Date(endTime);
-        const diff = Math.floor((end - start) / 1000 / 60);
-
-        const hours = Math.floor(diff / 60);
-        const minutes = diff % 60;
-
-        return `${hours}h ${minutes}m`;
-    }
-
-    function formatDateTime(dateTimeString) {
-        return new Date(dateTimeString).toLocaleString();
-    }
-
-    function showLoading(show) {
-        const loadingDiv = document.getElementById('loading');
-        if (loadingDiv) {
-            loadingDiv.style.display = show ? 'flex' : 'none';
-        }
-    }
-
-    function showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-
-        document.body.appendChild(notification);
-
-        setTimeout(() => notification.classList.add('show'), 100);
-
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-    }
-
     async function syncToReai() {
-        if (!selectedTenantId) {
-            showNotification('Please select a tenant first', 'error');
+        if (!selectedEmployeeId) {
+            showNotification('Please select an employee first', 'error');
             return;
         }
+
+        // const projectId = currentTimerData?.projectId;
+        // if (!projectId) {
+        //     showNotification('No project selected to sync', 'error');
+        //     return;
+        // }
 
         try {
             showLoading(true);
 
-            const params = new URLSearchParams({ tenantId: selectedTenantId });
-            if (accessToken) {
-                params.append('access_token', accessToken);
-            }
-
-            const response = await fetch(`/api/time/sync?${params.toString()}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const url = `/api/time/sync?employeeId=${selectedEmployeeId}`;
+            const response = await APIClient.post(url);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -961,23 +1053,121 @@
         }
     }
 
-    window.debugEmployees = async function() {
+    // Authentication
+    function logout() {
+        TokenManager.clearToken();
+        stopTimerDisplay();
+
+        selectedEmployeeId = null;
+        selectedEmployeeName = null;
+        currentTimerData = null;
+
+        document.getElementById('timer-section').style.display = 'none';
+        document.getElementById('entries-section').style.display = 'none';
+        document.getElementById('selected-employee').style.display = 'none';
+
+        document.getElementById('employee-select').innerHTML = '<option value="">-- Select Employee --</option>';
+        document.getElementById('project-select').innerHTML = '<option value="">-- Select Project --</option>';
+        const projectInput = document.getElementById('project-name');
+        if (projectInput) {
+            projectInput.value = '';
+        }
+
+        showNotification('Logged out successfully', 'success');
+    }
+
+    function formatDuration(startTime, endTime) {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const diff = Math.floor((end - start) / 1000 / 60);
+
+        const hours = Math.floor(diff / 60);
+        const minutes = diff % 60;
+
+        return `${hours}h ${minutes}m`;
+    }
+
+    function formatDateTime(dateTimeString) {
         try {
-            const params = new URLSearchParams({ tenantId: '5' });
-            if (accessToken) {
-                params.append('access_token', accessToken);
-            }
-            const response = await fetch(`/api/employees?${params.toString()}`);
-            const data = await response.json();
-            console.log('Employees data:', data);
-            return data;
+            return new Date(dateTimeString).toLocaleString();
         } catch (error) {
-            console.error('Debug error:', error);
+            return 'Invalid date';
+        }
+    }
+
+    function showLoading(show) {
+        const loadingDiv = document.getElementById('loading');
+        if (loadingDiv) {
+            loadingDiv.style.display = show ? 'flex' : 'none';
+        }
+    }
+
+    function showNotification(message, type = 'success') {
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        });
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => notification.classList.add('show'), 100);
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
+    }
+
+    // Debug Functions
+    window.debugToken = function() {
+        const token = TokenManager.getToken();
+        if (token) {
+            const payload = TokenManager.getTokenPayload(token);
+            console.log('Token payload:', payload);
+            console.log('Token expired:', TokenManager.isTokenExpired(token));
+            return { token: token.substring(0, 50) + '...', payload };
+        } else {
+            console.log('No token found');
+            return null;
         }
     };
 
+    window.debugAPI = async function(endpoint) {
+        try {
+            const response = await APIClient.get(endpoint);
+            const data = await response.json();
+            console.log('API Response:', data);
+            return data;
+        } catch (error) {
+            console.error('API Error:', error);
+            return null;
+        }
+    };
+
+    // Cleanup
     window.addEventListener('beforeunload', function() {
         stopLiveDurationUpdate();
+    });
+
+    // Error handling
+    window.addEventListener('error', function(event) {
+        console.error('Global error:', event.error);
+        showNotification('An unexpected error occurred', 'error');
+    });
+
+    window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        showNotification('An unexpected error occurred', 'error');
     });
 </script>
 </body>

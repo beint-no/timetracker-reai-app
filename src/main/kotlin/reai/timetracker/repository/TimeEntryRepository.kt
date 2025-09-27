@@ -11,34 +11,25 @@ import java.util.*
 @Repository
 interface TimeEntryRepository : JpaRepository<TimeEntry, Long> {
 
-    fun findByEmployeeIdAndEndTimeIsNullAndTenantId(
-        employeeId: Long,
-        tenantId: Long
+    fun findByEmployeeIdAndEndTimeIsNull(
+        employeeId: Long
     ): Optional<TimeEntry>
 
-    fun findByEmployeeIdAndTenantIdOrderByStartTimeDesc(
+    fun findByEmployeeIdOrderByStartTimeDesc(
         employeeId: Long,
-        tenantId: Long
     ): List<TimeEntry>
 
-    fun findByIdAndTenantId(
-        id: Long,
-        tenantId: Long
-    ): Optional<TimeEntry>
-
-    fun findUnsyncedEntriesByTenantId(tenantId: Long): List<TimeEntry>
-
-    fun findByTenantIdOrderByStartTimeDesc(tenantId: Long): List<TimeEntry>
 
     @Query("""
     SELECT e FROM TimeEntry e
-    WHERE e.tenantId = :tenantId
-      AND e.employeeId = :employeeId
+    WHERE
+       e.employeeId = :employeeId
       AND e.entryDate = :today
 """)
     fun findEntriesToday(
-        @Param("tenantId") tenantId: Long,
         @Param("employeeId") employeeId: Long,
         @Param("today") today: LocalDate
     ): List<TimeEntry>
+
+    fun findByEmployeeIdAndProjectIdAndEntryDateAndSyncedIsFalse(employeeId: Long, projectId: Long, entryDate: LocalDate): List<TimeEntry>
 }

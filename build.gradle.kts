@@ -19,38 +19,33 @@ repositories {
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_24)
-        freeCompilerArgs.add("-Xannotation-default-target=param-property ")
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
     }
 }
 
 dependencies {
-    "implementation"("org.jetbrains.kotlin:kotlin-reflect:2.2.20")
-    "implementation"("org.jetbrains.kotlin:kotlin-stdlib:2.2.20")
-    "implementation"("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
-    "implementation"("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
-
-    "implementation"("org.springframework.boot:spring-boot-starter-web:3.5.6")
-    "implementation"("org.springframework.boot:spring-boot-starter-webflux:3.5.6")
-    "implementation"("org.springframework.boot:spring-boot-starter-data-jpa:3.5.6")
-    "implementation"("org.springframework.boot:spring-boot-starter-thymeleaf:3.5.6")
-    "implementation"("org.springframework.boot:spring-boot-starter-validation:3.5.6")
-    "implementation"("org.springframework.boot:spring-boot-starter-actuator:3.5.6")
-
-    "implementation"("org.flywaydb:flyway-core:10.19.0")
-    "implementation"("org.flywaydb:flyway-database-postgresql:10.19.0")
-    "runtimeOnly"("org.postgresql:postgresql:42.7.4")
-
-    "implementation"("io.jsonwebtoken:jjwt-api:0.11.5")
-    "runtimeOnly"("io.jsonwebtoken:jjwt-impl:0.11.5")
-    "runtimeOnly"("io.jsonwebtoken:jjwt-jackson:0.11.5")
-    "implementation"("com.auth0:java-jwt:4.4.0")
-
-    "developmentOnly"("org.springframework.boot:spring-boot-devtools:3.5.6")
-
-    "testImplementation"("org.springframework.boot:spring-boot-starter-test:3.5.6")
-    "testImplementation"("org.testcontainers:junit-jupiter:1.20.2")
-    "testImplementation"("org.testcontainers:postgresql:1.20.2")
-    "testImplementation"("org.springframework.boot:spring-boot-testcontainers:3.5.6")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
+    runtimeOnly("org.postgresql:postgresql")
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+    implementation("com.auth0:java-jwt:4.4.0")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
 }
 
 tasks.withType<Test> {

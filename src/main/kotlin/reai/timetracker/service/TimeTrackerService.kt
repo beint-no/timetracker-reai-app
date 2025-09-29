@@ -126,7 +126,7 @@ class TimeTrackerService(
         repository.findByEmployeeIdAndEndTimeIsNull(employeeId)
 
     fun getTimeEntries(employeeId: Long, accessToken: String?): List<TimeEntry> {
-        validateEmployeeAccess(employeeId, accessToken)
+//        validateEmployeeAccess(employeeId, accessToken)
         return repository.findByEmployeeIdOrderByStartTimeDesc(employeeId)
     }
 

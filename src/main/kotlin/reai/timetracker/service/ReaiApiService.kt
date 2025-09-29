@@ -67,7 +67,7 @@ class ReaiApiService(
 
         return try {
             val employee = restClient.get()
-                .uri("api/employee/{id}", id)
+                .uri("api/employee/detail?id=${id}")
                 .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()

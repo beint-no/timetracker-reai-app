@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReAI Time Tracker</title>
     <style>
+        :root {
+            --color-bg: #f5f7fb;
+            --color-surface: #ffffff;
+            --color-surface-alt: #f8f9ff;
+            --color-primary: #5561ff;
+            --color-primary-hover: #434de7;
+            --color-danger: #ff6b6b;
+            --color-danger-hover: #f05252;
+            --color-text: #1f2933;
+            --color-muted: #6b7280;
+            --color-border: #dfe4f4;
+            --color-border-strong: rgba(85, 97, 255, 0.35);
+            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.08);
+            --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,275 +32,472 @@
 
         body {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--color-bg);
+            color: var(--color-text);
             min-height: 100vh;
-            color: #333;
         }
 
-        .container {
-            max-width: 1200px;
+        .app-shell {
+            width: min(1120px, 100%);
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 32px 60px;
+        }
+
+        .app-header {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 28px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(85, 97, 255, 0.08);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .brand-symbol {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #5561ff, #7a58ff);
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            min-height: 100vh;
-            align-items: start;
-        }
-
-        .left-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .right-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1.1rem;
-        }
-
-        .employee-section h3,
-        .timer-section h3,
-        .entries-section h3 {
-            margin-bottom: 20px;
-            color: #2d3748;
-            font-size: 1.5rem;
+            place-items: center;
+            color: #ffffff;
+            font-size: 26px;
             font-weight: 600;
         }
 
-        #employee-select, #tenant-select, #project-select {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            background: white;
-            transition: all 0.3s ease;
-            margin-bottom: 15px;
+        .brand-text h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: 4px;
         }
 
-        #employee-select:focus, #tenant-select:focus, #project-select:focus {
+        .brand-text p {
+            font-size: 14px;
+            color: var(--color-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions .btn-sync {
+            padding: 10px 18px;
+            font-size: 14px;
+        }
+
+        .token-status {
+            background: #eef2ff;
+            color: #373f8a;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(85, 97, 255, 0.18);
+        }
+
+        .token-status.valid {
+            background: #e0f8ed;
+            color: #166c44;
+            border-color: rgba(34, 197, 94, 0.25);
+        }
+
+        .token-status.invalid {
+            background: #ffe4e6;
+            color: #b42318;
+            border-color: rgba(244, 63, 94, 0.25);
+        }
+
+        .container {
+            display: block;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 28px;
+            border: 1px solid rgba(85, 97, 255, 0.08);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .panel-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .panel-header p {
+            font-size: 13px;
+            color: var(--color-muted);
+            margin-top: 4px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            font-size: 15px;
+            background: #ffffff;
+            color: var(--color-text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        select:focus,
+        input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(85, 97, 255, 0.12);
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-muted);
         }
 
         .selected-info {
-            margin-top: 15px;
-            padding: 15px;
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            border-radius: 10px;
-            color: white;
-            font-weight: 500;
-            text-align: center;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: var(--radius-md);
+            border: 1px dashed rgba(85, 97, 255, 0.25);
+            background: var(--color-surface-alt);
+        }
+
+        .selected-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-muted);
+            font-weight: 600;
+        }
+
+        .selected-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .selected-meta {
+            font-size: 13px;
+            color: var(--color-muted);
+        }
+
+        .timer-section.is-running {
+            border-color: var(--color-border-strong);
+            box-shadow: 0 20px 44px rgba(85, 97, 255, 0.12);
+        }
+
+        .status-badge {
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: #eef2ff;
+            color: #3d44a6;
+            border: 1px solid rgba(85, 97, 255, 0.25);
+        }
+
+        .status-running {
+            background: rgba(85, 97, 255, 0.14);
+            color: #2b34c7;
+            border-color: rgba(85, 97, 255, 0.35);
+        }
+
+        .status-idle {
+            background: rgba(148, 163, 184, 0.15);
+            color: #4b5563;
+            border-color: rgba(148, 163, 184, 0.3);
         }
 
         .timer-display {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 30px;
-            position: relative;
+            gap: 18px;
+            padding: 26px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            background: linear-gradient(135deg, #f4f6ff 0%, #ffffff 55%);
+            margin-bottom: 26px;
+            min-height: 152px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .circular-timer {
-            width: 200px;
-            height: 200px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
+        .timer-section.is-running .timer-display {
+            border-color: rgba(85, 97, 255, 0.4);
+            box-shadow: 0 16px 32px rgba(85, 97, 255, 0.12);
         }
 
-        .timer-circle {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, #667eea, #764ba2, #667eea);
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: rotate 60s linear infinite;
-        }
-
-        .timer-circle::before {
-            content: '';
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: white;
-            position: absolute;
-        }
-
-        .timer-time {
-            position: relative;
-            z-index: 2;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3748;
-            font-family: 'Courier New', monospace;
-        }
-
-        .project-info {
+        .timer-empty {
             text-align: center;
-            color: #4a5568;
+            color: var(--color-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
-        .project-name {
-            font-size: 1.2rem;
+        .timer-empty .icon {
+            font-size: 36px;
+        }
+
+        .timer-empty small {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .timer-running {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .timer-digits {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 46px;
             font-weight: 600;
-            margin-bottom: 5px;
+            letter-spacing: 0.08em;
+            color: var(--color-primary);
         }
 
-        .start-time {
-            font-size: 0.9rem;
-            opacity: 0.7;
+        .timer-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .timer-project {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .timer-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--color-muted);
         }
 
         .timer-controls {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-
-        #project-name {
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        #project-name:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            gap: 18px;
         }
 
         .button-group {
-            display: flex;
-            gap: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
         }
 
         .btn {
-            flex: 1;
-            padding: 15px 25px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
             font-weight: 600;
+            padding: 12px 20px;
+            border: none;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn:hover::before {
-            left: 100%;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
         }
 
         .btn-start {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
+            background: var(--color-primary);
+            color: #ffffff;
+            box-shadow: 0 14px 28px rgba(85, 97, 255, 0.22);
         }
 
         .btn-start:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+            background: var(--color-primary-hover);
+            transform: translateY(-1px);
         }
 
         .btn-stop {
-            background: linear-gradient(135deg, #f56565, #e53e3e);
-            color: white;
+            background: var(--color-danger);
+            color: #ffffff;
+            box-shadow: 0 14px 28px rgba(255, 107, 107, 0.22);
         }
 
         .btn-stop:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 101, 101, 0.4);
+            background: var(--color-danger-hover);
+            transform: translateY(-1px);
         }
 
         .btn-sync {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 10px 20px;
-            font-size: 14px;
+            background: #1f2933;
+            color: #ffffff;
+            padding: 12px 22px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
         }
 
         .btn-sync:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            background: #111827;
+            transform: translateY(-1px);
         }
 
         .btn-logout {
-            background: linear-gradient(135deg, #718096, #4a5568);
-            color: white;
-            padding: 8px 16px;
-            font-size: 12px;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
+            background: #ffffff;
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            padding: 10px 20px;
+        }
+
+        .btn-logout:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .entries-section,
+        .today-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
         .section-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .section-header p {
+            font-size: 13px;
+            color: var(--color-muted);
+            margin-top: 4px;
+        }
+
+        .section-header .total-pill {
+            margin-left: auto;
+        }
+
+        .table-wrapper {
+            overflow: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+        }
+
+        .entries-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-surface);
+            min-width: 540px;
+        }
+
+        .entries-table thead {
+            background: #eef2ff;
+        }
+
+        .entries-table th,
+        .entries-table td {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 13px;
+            color: var(--color-text);
+        }
+
+        .entries-table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #4b5563;
+        }
+
+        .entries-table tbody tr:nth-child(odd) {
+            background: var(--color-surface-alt);
+        }
+
+        .entries-table tbody tr:hover {
+            background: rgba(85, 97, 255, 0.08);
+        }
+
+        .entries-table .empty-row {
+            text-align: center;
+            color: var(--color-muted);
+        }
+
+        .entries-table .empty-row td {
+            text-align: center;
+        }
+
+        .entries-table .entry-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .entries-container {
-            max-height: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: 540px;
             overflow-y: auto;
-            padding-right: 10px;
+            padding-right: 6px;
         }
 
         .entries-container::-webkit-scrollbar {
@@ -289,120 +505,177 @@
         }
 
         .entries-container::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 3px;
+            background: rgba(59, 72, 99, 0.25);
+            border-radius: 999px;
+        }
+
+        .entries-placeholder,
+        .today-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 40px 20px;
+            border-radius: var(--radius-md);
+            background: var(--color-surface-alt);
+            border: 1px dashed var(--color-border);
+            color: var(--color-muted);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .entries-placeholder span,
+        .today-placeholder span {
+            font-size: 24px;
+        }
+
+        .total-pill {
+            background: rgba(85, 97, 255, 0.12);
+            color: var(--color-primary);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
         }
 
         .entry {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            background: var(--color-surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
         }
 
         .entry:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--color-border-strong);
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+            transform: translateY(-2px);
         }
 
         .entry.active {
-            background: linear-gradient(135deg, #fed7d7, #feb2b2);
-            border-color: #f56565;
-        }
-
-        .entry.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 4px;
-            height: 100%;
-            background: #f56565;
+            border-color: rgba(85, 97, 255, 0.4);
+            box-shadow: 0 20px 36px rgba(85, 97, 255, 0.12);
         }
 
         .entry-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            justify-content: space-between;
+            gap: 16px;
         }
 
-        .project-name-entry {
-            font-size: 1.1rem;
+        .entry .project-name {
+            font-size: 18px;
             font-weight: 600;
-            color: #2d3748;
+            color: var(--color-text);
         }
 
         .entry-status {
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 6px 14px;
+            border-radius: 999px;
             font-size: 12px;
             font-weight: 600;
+            letter-spacing: 0.06em;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            background: #eef2ff;
+            color: #3d44a6;
         }
 
-        .status-running {
-            background: #fed7d7;
-            color: #c53030;
+        .entry-status.status-running {
+            background: rgba(255, 107, 107, 0.18);
+            color: #b91c1c;
         }
 
-        .status-completed {
-            background: #c6f6d5;
-            color: #22543d;
+        .entry-status.status-completed {
+            background: rgba(34, 197, 94, 0.16);
+            color: #166c44;
         }
 
         .entry-meta {
-            color: #718096;
-            font-size: 14px;
-            line-height: 1.5;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px 18px;
+            font-size: 13px;
+            color: var(--color-muted);
+        }
+
+        .entry-meta div {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .entry-meta strong {
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .entry-note {
+            grid-column: 1 / -1;
+            color: var(--color-text);
         }
 
         .duration {
-            font-weight: 600;
-            color: #2d3748;
+            color: var(--color-primary);
+            font-weight: 700;
         }
 
-        .inactive-timer {
-            text-align: center;
-            padding: 40px;
-            color: #a0aec0;
-            font-size: 1.1rem;
-        }
-
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #667eea;
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 1200;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #667eea;
+            width: 52px;
+            height: 52px;
+            border: 4px solid rgba(255, 255, 255, 0.35);
+            border-top: 4px solid var(--color-primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+        }
+
+        .loading-overlay p {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .notification {
+            position: fixed;
+            top: 28px;
+            right: 32px;
+            padding: 14px 22px;
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 1300;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            background: #22c55e;
+        }
+
+        .notification.error {
+            background: #f05252;
         }
 
         @keyframes spin {
@@ -410,158 +683,190 @@
             100% { transform: rotate(360deg); }
         }
 
-        .notification {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 10px;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            max-width: 300px;
-            word-wrap: break-word;
+        @media (max-width: 1080px) {
+            .app-shell {
+                padding: 32px 24px 40px;
+            }
+
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
         }
 
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-        }
-
-        .notification.error {
-            background: linear-gradient(135deg, #f56565, #e53e3e);
-        }
-
-        .token-status {
-            position: fixed;
-            top: 60px;
-            right: 20px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            z-index: 999;
-        }
-
-        .token-status.valid {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-
-        .token-status.invalid {
-            background: #fed7d7;
-            color: #c53030;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
+        @media (max-width: 720px) {
+            .app-header {
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 20px;
-                padding: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .timer-digits {
+                font-size: 36px;
+            }
+
+            .entries-container {
+                max-height: none;
+            }
+
+            .table-wrapper {
+                border-radius: var(--radius-sm);
+            }
+
+            .notification {
+                left: 20px;
+                right: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-shell {
+                padding: 24px 18px 36px;
             }
 
             .card {
-                padding: 20px;
+                padding: 22px;
             }
 
-            .header h1 {
-                font-size: 2rem;
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
 
-            .circular-timer {
-                width: 150px;
-                height: 150px;
-            }
-
-            .timer-circle {
-                width: 150px;
-                height: 150px;
-            }
-
-            .timer-circle::before {
-                width: 130px;
-                height: 130px;
-            }
-
-            .timer-time {
-                font-size: 1.5rem;
-            }
-
-            .btn-logout, .token-status {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin: 10px 0;
+            .header-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
             }
         }
     </style>
 </head>
 <body>
-<button onclick="logout()" class="btn btn-logout">Logout</button>
-<div id="token-status" class="token-status"></div>
-
-<div class="header">
-    <h1>ReAI Time Tracker</h1>
-    <p>Track your time with style and sync with ReAI platform</p>
-</div>
-
-<div class="container">
-    <div class="left-panel">
-        <div class="card employee-section">
-            <h3>Select Employee</h3>
-            <select id="employee-select" onchange="selectEmployee()">
-                <option value="">-- Select Employee --</option>
-            </select>
-            <div id="selected-employee" class="selected-info" style="display: none;"></div>
+<div class="app-shell">
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-symbol">⏱</div>
+            <div class="brand-text">
+                <h1>ReAI Time Tracker</h1>
+                <p>Clockify-inspired productivity dashboard</p>
+            </div>
         </div>
+        <div class="header-actions">
+            <div id="token-status" class="token-status">Token: Checking...</div>
+            <button onclick="syncToReai()" class="btn btn-sync">🔄 Sync to ReAI</button>
+            <button onclick="logout()" class="btn btn-logout">Logout</button>
+        </div>
+    </header>
 
-        <div class="card timer-section" id="timer-section" style="display: none;">
-            <h3>Time Tracker</h3>
-            <div id="current-timer" class="timer-display">
-                <div class="inactive-timer">
-                    <div>⏰</div>
-                    <div>No active timer</div>
-                </div>
+    <div class="container">
+        <div class="layout">
+            <div class="left-column">
+                <section class="card employee-section">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Team Member</h2>
+                            <p>Pick whose time you are logging</p>
+                        </div>
+                    </div>
+                    <select id="employee-select" onchange="selectEmployee()">
+                        <option value="">-- Select Employee --</option>
+                    </select>
+                    <div id="selected-employee" class="selected-info" style="display: none;"></div>
+                </section>
+
+                <section class="card timer-section" id="timer-section" style="display: none;">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Timer</h2>
+                            <p>Launch focused sessions instantly</p>
+                        </div>
+                        <span id="timer-status-badge" class="status-badge status-idle">Idle</span>
+                    </div>
+
+                    <div id="current-timer" class="timer-display">
+                        <div class="timer-empty">
+                            <span class="icon">⏱</span>
+                            <p>No active timer yet</p>
+                            <small>Select a project and press start</small>
+                        </div>
+                    </div>
+
+                    <div class="timer-controls">
+                        <div class="field">
+                            <label for="project-select" class="field-label">Project</label>
+                            <select id="project-select">
+                                <option value="">-- Select Project --</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="project-name" class="field-label">Project name</label>
+                            <input type="text"
+                                   id="project-name"
+                                   placeholder="Select a project from the list"
+                                   maxlength="100"
+                                   disabled>
+                        </div>
+
+                        <div class="button-group">
+                            <button onclick="startTimer()" class="btn btn-start">▶ Start</button>
+                            <button onclick="stopTimer()" class="btn btn-stop">■ Stop</button>
+                        </div>
+                    </div>
+                </section>
             </div>
 
-            <div class="timer-controls">
-                <select id="project-select">
-                    <option value="">-- Select Project --</option>
-                </select>
-                <input type="text"
-                       id="project-name"
-                       placeholder="Select a project from the list"
-                       maxlength="100"
-                       disabled>
-                <div class="button-group">
-                    <button onclick="startTimer()" class="btn btn-start">▶ Start</button>
-                    <button onclick="stopTimer()" class="btn btn-stop">⏸ Stop</button>
-                </div>
+            <div class="right-column">
+                <section class="card today-section" id="today-section" style="display: none;">
+                    <div class="section-header">
+                        <div>
+                            <h2>Today's Log</h2>
+                            <p>Sessions started in the last 24 hours</p>
+                        </div>
+                        <span id="today-total" class="total-pill">0h 0m</span>
+                    </div>
+                    <div class="table-wrapper" id="today-table-wrapper" style="display: none;">
+                        <table class="entries-table">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="today-entries-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="today-placeholder" class="today-placeholder">
+                        <span>🌤</span>
+                        <p>No time tracked yet today</p>
+                    </div>
+                </section>
+
+                <div id="entries" class="entries-container" style="display: none;"></div>
             </div>
         </div>
     </div>
-
-    <div class="right-panel">
-        <div class="card entries-section" id="entries-section" style="display: none;">
-            <div class="section-header">
-                <h3>Time Entries</h3>
-                <button onclick="syncToReai()" class="btn btn-sync">🔄 Sync to ReAI</button>
-            </div>
-            <div id="entries" class="entries-container">
-                <div style="text-align: center; color: #a0aec0; padding: 40px; font-size: 1.1rem;">📝 No time entries loaded</div>
-            </div>
-        </div>
-    </div>
 </div>
 
-<div id="loading" class="loading" style="display: none;">
+<div id="loading" class="loading-overlay" style="display: none;">
     <div class="spinner"></div>
-    <div>Loading...</div>
+    <p>Loading...</p>
 </div>
 
 <script>
@@ -693,6 +998,17 @@
     let durationInterval = null;
     let isStarting = false;
     let currentTimerData = null;
+    let entriesCache = [];
+    const projectMap = new Map();
+    const SELECTED_EMPLOYEE_KEY = 'reai_selected_employee_id';
+
+    const entriesContainer = document.getElementById('entries');
+    const entriesSection = document.getElementById('entries-section');
+    const todaySection = document.getElementById('today-section');
+    const todayTableWrapper = document.getElementById('today-table-wrapper');
+    const todayEntriesBody = document.getElementById('today-entries-body');
+    const todayPlaceholder = document.getElementById('today-placeholder');
+    const todayTotal = document.getElementById('today-total');
 
     document.addEventListener('DOMContentLoaded', function() {
         TokenManager.updateTokenStatus();
@@ -732,6 +1048,7 @@
 
             const employees = await response.json();
             populateEmployeeSelect(employees);
+            restoreSelectedEmployee();
 
         } catch (error) {
             console.error('Error loading employees:', error);
@@ -761,33 +1078,88 @@
         }
     }
 
+    function restoreSelectedEmployee() {
+        try {
+            const storedId = localStorage.getItem(SELECTED_EMPLOYEE_KEY);
+            if (!storedId) {
+                return;
+            }
+
+            const employeeSelect = document.getElementById('employee-select');
+            const hasOption = Array.from(employeeSelect.options).some(option => option.value === storedId);
+
+            if (hasOption) {
+                employeeSelect.value = storedId;
+                selectEmployee();
+            } else {
+                localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
+            }
+        } catch (error) {
+            console.warn('Unable to restore selected employee:', error);
+        }
+    }
+
     function selectEmployee() {
         const employeeSelect = document.getElementById('employee-select');
         const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
 
         selectedEmployeeId = employeeSelect.value;
-        selectedEmployeeName = selectedOption.dataset.name || selectedOption.text;
+        selectedEmployeeName = selectedOption?.dataset.name || selectedOption?.text || '';
 
         const selectedEmployeeDiv = document.getElementById('selected-employee');
         const timerSection = document.getElementById('timer-section');
-        const entriesSection = document.getElementById('entries-section');
 
         if (selectedEmployeeId) {
-            const employeeInfo = `
-                <strong>Tracking time for:</strong> ${selectedEmployeeName}<br>
-                <small> Employee ID: ${selectedEmployeeId}</small>
+            try {
+                localStorage.setItem(SELECTED_EMPLOYEE_KEY, selectedEmployeeId);
+            } catch (error) {
+                console.warn('Unable to persist selected employee:', error);
+            }
+
+            const metaDetails = [];
+            if (selectedEmployeeId) {
+                metaDetails.push(`ID: ${selectedEmployeeId}`);
+            }
+            const email = selectedOption.dataset.email || '';
+            if (email) {
+                metaDetails.push(email);
+            }
+            const department = selectedOption.dataset.department || '';
+            if (department) {
+                metaDetails.push(department);
+            }
+
+            selectedEmployeeDiv.innerHTML = `
+                <span class="selected-label">Tracking time for</span>
+                <span class="selected-name">${selectedEmployeeName}</span>
+                <span class="selected-meta">${metaDetails.join(' &middot; ')}</span>
             `;
 
-            selectedEmployeeDiv.innerHTML = employeeInfo;
-            selectedEmployeeDiv.style.display = 'block';
+            selectedEmployeeDiv.style.display = 'flex';
             timerSection.style.display = 'block';
-            entriesSection.style.display = 'block';
+            if (entriesSection) {
+                entriesSection.style.display = 'block';
+            }
+            todaySection.style.display = 'block';
 
             loadProjects();
+            loadCurrentTimer();
+            loadEntries();
         } else {
+            try {
+                localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
+            } catch (error) {
+                console.warn('Unable to clear stored employee:', error);
+            }
+
             selectedEmployeeDiv.style.display = 'none';
+            selectedEmployeeDiv.innerHTML = '';
             timerSection.style.display = 'none';
-            entriesSection.style.display = 'none';
+            if (entriesSection) {
+                entriesSection.style.display = 'none';
+            }
+            todaySection.style.display = 'none';
+            resetEntriesUI();
             stopTimerDisplay();
         }
     }
@@ -821,9 +1193,107 @@
                 option.textContent = project.name;
                 option.dataset.projectId = project.id;
                 projectSelect.appendChild(option);
+
+                if (project && typeof project.id !== 'undefined') {
+                    projectMap.set(String(project.id), project.name);
+                }
             });
 
             console.log(`Loaded ${projects.length} projects`);
+        }
+    }
+
+    async function loadCurrentTimer() {
+        if (!selectedEmployeeId) {
+            return;
+        }
+
+        try {
+            const response = await APIClient.get(`/api/time/current?employeeId=${selectedEmployeeId}`);
+
+            if (response.status === 404) {
+                stopTimerDisplay();
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Failed to load current timer: ${response.status} ${response.statusText}`);
+            }
+
+            const timer = await response.json();
+
+            if (timer && timer.startTime) {
+                const resolvedProjectId = timer.projectId || timer.project?.id || null;
+                currentTimerData = {
+                    projectId: resolvedProjectId,
+                    projectName: resolveProjectName(resolvedProjectId, timer.projectName || timer.project?.name),
+                    startTime: timer.startTime,
+                    employeeName: selectedEmployeeName || timer.employeeName || ''
+                };
+
+                displayRunningTimer(currentTimerData);
+            } else {
+                stopTimerDisplay();
+            }
+
+        } catch (error) {
+            console.warn('Unable to load current timer:', error.message);
+            stopTimerDisplay();
+        }
+    }
+
+    async function loadEntries() {
+        if (!selectedEmployeeId) {
+            return;
+        }
+
+        if (entriesContainer) {
+            entriesContainer.innerHTML = '';
+        }
+
+        try {
+            const response = await APIClient.get(`/api/time/entries?employeeId=${selectedEmployeeId}`);
+
+            if (!response.ok) {
+                throw new Error(`Failed to load entries: ${response.status} ${response.statusText}`);
+            }
+
+            const entries = await response.json();
+            entriesCache = Array.isArray(entries) ? entries : [];
+
+            renderEntries(entriesCache);
+            renderTodayEntries(entriesCache);
+
+        } catch (error) {
+            console.error('Error loading time entries:', error);
+            if (entriesContainer) {
+                entriesContainer.innerHTML = '';
+            }
+            renderTodayEntries([]);
+        }
+    }
+
+    function resetEntriesUI() {
+        entriesCache = [];
+
+        if (entriesContainer) {
+            entriesContainer.innerHTML = '';
+        }
+
+        if (todayEntriesBody) {
+            todayEntriesBody.innerHTML = '';
+        }
+
+        if (todayPlaceholder) {
+            todayPlaceholder.style.display = 'flex';
+        }
+
+        if (todayTableWrapper) {
+            todayTableWrapper.style.display = 'none';
+        }
+
+        if (todayTotal) {
+            todayTotal.textContent = '0h 0m';
         }
     }
 
@@ -886,7 +1356,7 @@
     function handleTimerStarted(projectData, result) {
         currentTimerData = {
             projectId: projectData.projectId,
-            projectName: projectData.projectName,
+            projectName: resolveProjectName(projectData.projectId, projectData.projectName),
             startTime: result.startTime || new Date().toISOString(),
             employeeName: selectedEmployeeName
         };
@@ -894,6 +1364,7 @@
         displayRunningTimer(currentTimerData);
         clearProjectInputs();
         showNotification(`Timer started successfully for ${projectData.projectName}!`, 'success');
+        loadEntries();
     }
 
     function clearProjectInputs() {
@@ -955,26 +1426,44 @@
         stopTimerDisplay();
         const duration = formatDuration(entry.startTime, entry.endTime);
         showNotification(`Timer stopped! Project: ${entry.projectName}, Duration: ${duration}`, 'success');
+        loadEntries();
     }
 
     // Timer Display
+    function updateTimerVisualState(isRunning) {
+        const timerSection = document.getElementById('timer-section');
+        const statusBadge = document.getElementById('timer-status-badge');
+
+        if (timerSection) {
+            timerSection.classList.toggle('is-running', Boolean(isRunning));
+        }
+
+        if (statusBadge) {
+            statusBadge.textContent = isRunning ? 'Running' : 'Idle';
+            statusBadge.classList.toggle('status-running', Boolean(isRunning));
+            statusBadge.classList.toggle('status-idle', !isRunning);
+        }
+    }
+
     function displayRunningTimer(timerData) {
         const currentTimerDiv = document.getElementById('current-timer');
         const startTime = new Date(timerData.startTime);
 
         currentTimerDiv.innerHTML = `
-            <div class="circular-timer">
-                <div class="timer-circle pulse">
-                    <div class="timer-time" id="live-duration">00:00:00</div>
+            <div class="timer-running">
+                <div class="timer-digits" id="live-duration">00:00:00</div>
+                <div class="timer-details">
+                    <div class="timer-project">${timerData.projectName}</div>
+                    <div class="timer-meta">
+                        <span>Started ${formatDateTime(timerData.startTime)}</span>
+                        <span>Employee: ${timerData.employeeName}</span>
+                    </div>
                 </div>
-            </div>
-            <div class="project-info">
-                <div class="project-name">${timerData.projectName}</div>
-                <div class="start-time">Started: ${formatDateTime(timerData.startTime)}</div>
-                <div class="start-time">Employee: ${timerData.employeeName}</div>
             </div>
         `;
 
+        currentTimerData = timerData;
+        updateTimerVisualState(true);
         startLiveDurationUpdate(startTime);
     }
 
@@ -982,12 +1471,14 @@
         const currentTimerDiv = document.getElementById('current-timer');
 
         currentTimerDiv.innerHTML = `
-            <div class="inactive-timer">
-                <div style="font-size: 3rem; margin-bottom: 10px;">⏰</div>
-                <div>No active timer</div>
+            <div class="timer-empty">
+                <span class="icon">⏱</span>
+                <p>No active timer yet</p>
+                <small>Select a project and press start</small>
             </div>
         `;
 
+        updateTimerVisualState(false);
         stopLiveDurationUpdate();
         currentTimerData = null;
     }
@@ -1019,6 +1510,123 @@
         }
     }
 
+    function renderEntries(entries) {
+        if (!entriesContainer) {
+            return;
+        }
+
+        if (!Array.isArray(entries) || entries.length === 0) {
+            entriesContainer.innerHTML = `
+                <div class="entries-placeholder">
+                    <span>📝</span>
+                    <p>No time entries found</p>
+                </div>
+            `;
+            return;
+        }
+
+        const entriesHtml = entries.map(entry => {
+        const projectName = resolveProjectName(entry.projectId, entry.projectName || entry.project?.name);
+            const isActive = !entry.endTime;
+            const duration = isActive ? formatCurrentDuration(entry.startTime) : formatDuration(entry.startTime, entry.endTime);
+            const startDisplay = formatDateTime(entry.startTime);
+            const endDisplay = entry.endTime ? formatDateTime(entry.endTime) : 'In progress';
+            const descriptionBlock = entry.description ? `<div class="entry-note"><strong>Notes:</strong> ${entry.description}</div>` : '';
+
+            return `
+                <div class="entry ${isActive ? 'active' : ''}">
+                    <div class="entry-header">
+                        <div class="project-name">${projectName}</div>
+                        <div class="entry-status ${isActive ? 'status-running' : 'status-completed'}">
+                            ${isActive ? 'Running' : 'Completed'}
+                        </div>
+                    </div>
+                    <div class="entry-meta">
+                        <div><strong>Duration:</strong> <span class="duration">${duration}</span></div>
+                        <div><strong>Started:</strong> ${startDisplay}</div>
+                        ${entry.endTime ? `<div><strong>Ended:</strong> ${endDisplay}</div>` : ''}
+                        <div><strong>Billable:</strong> ${entry.billable ? 'Yes' : 'No'}</div>
+                        <div><strong>Synced:</strong> ${entry.synced ? 'Yes' : 'No'}</div>
+                        ${descriptionBlock}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        entriesContainer.innerHTML = entriesHtml;
+    }
+
+    function renderTodayEntries(entries) {
+        if (!todaySection) {
+            return;
+        }
+
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+
+        const todaysEntries = (entries || []).filter(entry => {
+            if (!entry.startTime) {
+                return false;
+            }
+            const startTime = new Date(entry.startTime);
+            return startTime >= startOfDay && startTime < endOfDay;
+        });
+
+        if (!todaysEntries.length) {
+            if (todayPlaceholder) {
+                todayPlaceholder.style.display = 'flex';
+            }
+            if (todayTableWrapper) {
+                todayTableWrapper.style.display = 'none';
+            }
+            if (todayEntriesBody) {
+                todayEntriesBody.innerHTML = '';
+            }
+            if (todayTotal) {
+                todayTotal.textContent = '0h 0m';
+            }
+            return;
+        }
+
+        if (todayPlaceholder) {
+            todayPlaceholder.style.display = 'none';
+        }
+        if (todayTableWrapper) {
+            todayTableWrapper.style.display = 'block';
+        }
+
+        const rows = todaysEntries.map(entry => {
+            const projectName = resolveProjectName(entry.projectId, entry.projectName || entry.project?.name);
+            const isActive = !entry.endTime;
+            const duration = isActive ? formatCurrentDuration(entry.startTime) : formatDuration(entry.startTime, entry.endTime);
+            const start = formatTime(entry.startTime);
+            const end = entry.endTime ? formatTime(entry.endTime) : '—';
+            const statusClass = isActive ? 'status-running' : 'status-completed';
+            const statusLabel = isActive ? 'Running' : 'Completed';
+
+            return `
+                <tr>
+                    <td>${projectName}</td>
+                    <td>${start}</td>
+                    <td>${end}</td>
+                    <td>${duration}</td>
+                    <td><span class="entry-status ${statusClass}">${statusLabel}</span></td>
+                </tr>
+            `;
+        }).join('');
+
+        if (todayEntriesBody) {
+            todayEntriesBody.innerHTML = rows;
+        }
+
+        if (todayTotal) {
+            const totalMinutes = todaysEntries.reduce((sum, entry) => sum + getDurationMinutes(entry.startTime, entry.endTime), 0);
+            todayTotal.textContent = formatMinutes(totalMinutes);
+        }
+    }
+
     async function syncToReai() {
         if (!selectedEmployeeId) {
             showNotification('Please select an employee first', 'error');
@@ -1044,6 +1652,7 @@
 
             const result = await response.text();
             showNotification(result, 'success');
+            loadEntries();
 
         } catch (error) {
             console.error('Error syncing entries:', error);
@@ -1063,8 +1672,13 @@
         currentTimerData = null;
 
         document.getElementById('timer-section').style.display = 'none';
-        document.getElementById('entries-section').style.display = 'none';
-        document.getElementById('selected-employee').style.display = 'none';
+        const entriesSectionEl = document.getElementById('entries-section');
+        if (entriesSectionEl) {
+            entriesSectionEl.style.display = 'none';
+        }
+        const selectedEmployeeDiv = document.getElementById('selected-employee');
+        selectedEmployeeDiv.style.display = 'none';
+        selectedEmployeeDiv.innerHTML = '';
 
         document.getElementById('employee-select').innerHTML = '<option value="">-- Select Employee --</option>';
         document.getElementById('project-select').innerHTML = '<option value="">-- Select Project --</option>';
@@ -1073,18 +1687,41 @@
             projectInput.value = '';
         }
 
+        try {
+            localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
+        } catch (error) {
+            console.warn('Unable to clear stored employee on logout:', error);
+        }
+
+        resetEntriesUI();
         showNotification('Logged out successfully', 'success');
     }
 
     function formatDuration(startTime, endTime) {
         const start = new Date(startTime);
         const end = new Date(endTime);
-        const diff = Math.floor((end - start) / 1000 / 60);
+        const diff = Math.max(Math.floor((end - start) / 1000 / 60), 0);
 
         const hours = Math.floor(diff / 60);
         const minutes = diff % 60;
 
         return `${hours}h ${minutes}m`;
+    }
+
+    function formatCurrentDuration(startTime) {
+        if (!startTime) {
+            return '00:00:00';
+        }
+
+        const start = new Date(startTime);
+        const now = new Date();
+        const diff = Math.max(now - start, 0);
+
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
     function formatDateTime(dateTimeString) {
@@ -1093,6 +1730,57 @@
         } catch (error) {
             return 'Invalid date';
         }
+    }
+
+    function formatTime(dateTimeString) {
+        try {
+            return new Date(dateTimeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (error) {
+            return '—';
+        }
+    }
+
+    function resolveProjectName(projectId, fallback) {
+        if (projectId) {
+            const key = String(projectId);
+            if (projectMap.has(key)) {
+                return projectMap.get(key);
+            }
+
+            const projectSelect = document.getElementById('project-select');
+            if (projectSelect) {
+                const match = Array.from(projectSelect.options).find(option => option.dataset.projectId === key);
+                if (match && match.textContent) {
+                    const resolved = match.textContent.trim();
+                    if (resolved.length > 0) {
+                        projectMap.set(key, resolved);
+                        return resolved;
+                    }
+                }
+            }
+        }
+
+        if (fallback && fallback.trim().length > 0) {
+            return fallback;
+        }
+        return 'Unnamed project';
+    }
+
+    function getDurationMinutes(startTime, endTime) {
+        const start = new Date(startTime);
+        const end = endTime ? new Date(endTime) : new Date();
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+            return 0;
+        }
+
+        const diff = Math.max(end - start, 0);
+        return Math.round(diff / 60000);
+    }
+
+    function formatMinutes(totalMinutes) {
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return `${hours}h ${minutes}m`;
     }
 
     function showLoading(show) {

@@ -41,7 +41,7 @@ class ReaiApiService(
         return try {
 
             val employees = restClient.get()
-                .uri("/api/app/tracker-time/list-employees")
+                .uri("/api/employee/list-employees")
                 .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -67,7 +67,7 @@ class ReaiApiService(
 
         return try {
             val employee = restClient.get()
-                .uri("api/app/tracker-time/employee/{id}", id)
+                .uri("api/employee/{id}", id)
                 .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -92,7 +92,7 @@ class ReaiApiService(
         return try {
             logger.info("Fetching projects for name: $name")
 
-            val uriBuilder = StringBuilder("api/app/tracker-time/list-projects")
+            val uriBuilder = StringBuilder("api/project/list-projects")
             if (!name.isNullOrBlank()) {
                 uriBuilder.append("?name={name}")
             }
@@ -134,7 +134,7 @@ class ReaiApiService(
             val timesheetEntry = mapToReaiEntry(entry)
 
             val response = restClient.post()
-                .uri("/api/app/tracker-time/timesheet/create")
+                .uri("/api/timesheet/create")
                 .header("Authorization", accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)

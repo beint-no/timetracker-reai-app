@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReAI Time Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.0.0-beta.6/dist/styles/themes/awesome.css">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.0.0-beta.6/dist/webawesome.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
     <style>
         :root {
             --color-bg: #f5f7fb;
@@ -97,6 +100,11 @@
             font-size: 14px;
         }
 
+        .header-actions wa-button.btn-sync::part(base) {
+            padding: 10px 18px;
+            font-size: 14px;
+        }
+
         .token-status {
             background: #eef2ff;
             color: #373f8a;
@@ -114,6 +122,28 @@
         }
 
         .token-status.invalid {
+            background: #ffe4e6;
+            color: #b42318;
+            border-color: rgba(244, 63, 94, 0.25);
+        }
+
+        wa-badge.token-status::part(base) {
+            background: #eef2ff;
+            color: #373f8a;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(85, 97, 255, 0.18);
+        }
+
+        wa-badge.token-status.valid::part(base) {
+            background: #e0f8ed;
+            color: #166c44;
+            border-color: rgba(34, 197, 94, 0.25);
+        }
+
+        wa-badge.token-status.invalid::part(base) {
             background: #ffe4e6;
             color: #b42318;
             border-color: rgba(244, 63, 94, 0.25);
@@ -143,6 +173,18 @@
         }
 
         .card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 28px;
+            border: 1px solid rgba(85, 97, 255, 0.08);
+        }
+
+        wa-card.card {
+            display: block;
+        }
+
+        wa-card.card::part(base) {
             background: var(--color-surface);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-lg);
@@ -184,6 +226,30 @@
 
         select:focus,
         input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(85, 97, 255, 0.12);
+        }
+
+        wa-select,
+        wa-input {
+            width: 100%;
+            display: block;
+        }
+
+        wa-select::part(combobox),
+        wa-input::part(base) {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            font-size: 15px;
+            background: #ffffff;
+            color: var(--color-text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        wa-select:focus-within::part(combobox),
+        wa-input:focus-within::part(base) {
             outline: none;
             border-color: var(--color-primary);
             box-shadow: 0 0 0 3px rgba(85, 97, 255, 0.12);
@@ -238,6 +304,11 @@
             box-shadow: 0 20px 44px rgba(85, 97, 255, 0.12);
         }
 
+        wa-card.timer-section.is-running::part(base) {
+            border-color: var(--color-border-strong);
+            box-shadow: 0 20px 44px rgba(85, 97, 255, 0.12);
+        }
+
         .status-badge {
             padding: 8px 14px;
             border-radius: 999px;
@@ -257,6 +328,30 @@
         }
 
         .status-idle {
+            background: rgba(148, 163, 184, 0.15);
+            color: #4b5563;
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        wa-badge.status-badge::part(base) {
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: #eef2ff;
+            color: #3d44a6;
+            border: 1px solid rgba(85, 97, 255, 0.25);
+        }
+
+        wa-badge.status-badge.status-running::part(base) {
+            background: rgba(85, 97, 255, 0.14);
+            color: #2b34c7;
+            border-color: rgba(85, 97, 255, 0.35);
+        }
+
+        wa-badge.status-badge.status-idle::part(base) {
             background: rgba(148, 163, 184, 0.15);
             color: #4b5563;
             border-color: rgba(148, 163, 184, 0.3);
@@ -358,6 +453,20 @@
             transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
         }
 
+        wa-button.btn::part(base) {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            padding: 12px 20px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
         .btn-start {
             background: var(--color-primary);
             color: #ffffff;
@@ -369,6 +478,17 @@
             transform: translateY(-1px);
         }
 
+        wa-button.btn-start::part(base) {
+            background: var(--color-primary);
+            color: #ffffff;
+            box-shadow: 0 14px 28px rgba(85, 97, 255, 0.22);
+        }
+
+        wa-button.btn-start:hover::part(base) {
+            background: var(--color-primary-hover);
+            transform: translateY(-1px);
+        }
+
         .btn-stop {
             background: var(--color-danger);
             color: #ffffff;
@@ -376,6 +496,17 @@
         }
 
         .btn-stop:hover {
+            background: var(--color-danger-hover);
+            transform: translateY(-1px);
+        }
+
+        wa-button.btn-stop::part(base) {
+            background: var(--color-danger);
+            color: #ffffff;
+            box-shadow: 0 14px 28px rgba(255, 107, 107, 0.22);
+        }
+
+        wa-button.btn-stop:hover::part(base) {
             background: var(--color-danger-hover);
             transform: translateY(-1px);
         }
@@ -393,6 +524,19 @@
             transform: translateY(-1px);
         }
 
+        wa-button.btn-sync::part(base) {
+            background: #1f2933;
+            color: #ffffff;
+            padding: 12px 22px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        wa-button.btn-sync:hover::part(base) {
+            background: #111827;
+            transform: translateY(-1px);
+        }
+
         .btn-logout {
             background: #ffffff;
             color: var(--color-text);
@@ -401,6 +545,19 @@
         }
 
         .btn-logout:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        wa-button.btn-logout::part(base) {
+            background: #ffffff;
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            padding: 10px 20px;
+        }
+
+        wa-button.btn-logout:hover::part(base) {
             border-color: var(--color-primary);
             color: var(--color-primary);
             box-shadow: var(--shadow-sm);
@@ -491,6 +648,12 @@
             justify-content: center;
         }
 
+        .entries-table wa-badge.entry-status::part(base) {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .entries-container {
             display: flex;
             flex-direction: column;
@@ -539,6 +702,16 @@
             letter-spacing: 0.05em;
         }
 
+        wa-badge.total-pill::part(base) {
+            background: rgba(85, 97, 255, 0.12);
+            color: var(--color-primary);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
         .entry {
             background: var(--color-surface);
             border-radius: var(--radius-md);
@@ -557,6 +730,28 @@
         }
 
         .entry.active {
+            border-color: rgba(85, 97, 255, 0.4);
+            box-shadow: 0 20px 36px rgba(85, 97, 255, 0.12);
+        }
+
+        wa-card.entry::part(base) {
+            background: var(--color-surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        wa-card.entry:hover::part(base) {
+            border-color: var(--color-border-strong);
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+            transform: translateY(-2px);
+        }
+
+        wa-card.entry.active::part(base) {
             border-color: rgba(85, 97, 255, 0.4);
             box-shadow: 0 20px 36px rgba(85, 97, 255, 0.12);
         }
@@ -591,6 +786,27 @@
         }
 
         .entry-status.status-completed {
+            background: rgba(34, 197, 94, 0.16);
+            color: #166c44;
+        }
+
+        wa-badge.entry-status::part(base) {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: #eef2ff;
+            color: #3d44a6;
+        }
+
+        wa-badge.entry-status.status-running::part(base) {
+            background: rgba(255, 107, 107, 0.18);
+            color: #b91c1c;
+        }
+
+        wa-badge.entry-status.status-completed::part(base) {
             background: rgba(34, 197, 94, 0.16);
             color: #166c44;
         }
@@ -637,12 +853,9 @@
         }
 
         .spinner {
-            width: 52px;
-            height: 52px;
-            border: 4px solid rgba(255, 255, 255, 0.35);
-            border-top: 4px solid var(--color-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            --indicator-color: var(--color-primary);
+            --track-color: rgba(255, 255, 255, 0.35);
+            --track-width: 4px;
         }
 
         .loading-overlay p {
@@ -677,12 +890,6 @@
         .notification.error {
             background: #f05252;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         @media (max-width: 1080px) {
             .app-shell {
                 padding: 32px 24px 40px;
@@ -741,6 +948,10 @@
                 padding: 22px;
             }
 
+            wa-card.card::part(base) {
+                padding: 22px;
+            }
+
             .panel-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -765,35 +976,35 @@
             </div>
         </div>
         <div class="header-actions">
-            <div id="token-status" class="token-status">Token: Checking...</div>
-            <button onclick="syncToReai()" class="btn btn-sync">🔄 Sync to ReAI</button>
-            <button onclick="logout()" class="btn btn-logout">Logout</button>
+            <wa-badge id="token-status" class="token-status" pill>Token: Checking...</wa-badge>
+            <wa-button onclick="syncToReai()" class="btn btn-sync" pill>🔄 Sync to ReAI</wa-button>
+            <wa-button onclick="logout()" class="btn btn-logout" pill>Logout</wa-button>
         </div>
     </header>
 
     <div class="container">
         <div class="layout">
             <div class="left-column">
-                <section class="card employee-section">
+                <wa-card class="card employee-section">
                     <div class="panel-header">
                         <div>
                             <h2>Team Member</h2>
                             <p>Pick whose time you are logging</p>
                         </div>
                     </div>
-                    <select id="employee-select" onchange="selectEmployee()">
-                        <option value="">-- Select Employee --</option>
-                    </select>
+                    <wa-select id="employee-select" placeholder="-- Select Employee --" onchange="selectEmployee()">
+                        <wa-option value="">-- Select Employee --</wa-option>
+                    </wa-select>
                     <div id="selected-employee" class="selected-info" style="display: none;"></div>
-                </section>
+                </wa-card>
 
-                <section class="card timer-section" id="timer-section" style="display: none;">
+                <wa-card class="card timer-section" id="timer-section" style="display: none;">
                     <div class="panel-header">
                         <div>
                             <h2>Timer</h2>
                             <p>Launch focused sessions instantly</p>
                         </div>
-                        <span id="timer-status-badge" class="status-badge status-idle">Idle</span>
+                        <wa-badge id="timer-status-badge" class="status-badge status-idle" pill>Idle</wa-badge>
                     </div>
 
                     <div id="current-timer" class="timer-display">
@@ -807,36 +1018,36 @@
                     <div class="timer-controls">
                         <div class="field">
                             <label for="project-select" class="field-label">Project</label>
-                            <select id="project-select">
-                                <option value="">-- Select Project --</option>
-                            </select>
+                            <wa-select id="project-select" placeholder="-- Select Project --">
+                                <wa-option value="">-- Select Project --</wa-option>
+                            </wa-select>
                         </div>
 
                         <div class="field">
                             <label for="project-name" class="field-label">Project name</label>
-                            <input type="text"
-                                   id="project-name"
-                                   placeholder="Select a project from the list"
-                                   maxlength="100"
-                                   disabled>
+                            <wa-input type="text"
+                                      id="project-name"
+                                      placeholder="Select a project from the list"
+                                      maxlength="100"
+                                      disabled></wa-input>
                         </div>
 
                         <div class="button-group">
-                            <button onclick="startTimer()" class="btn btn-start">▶ Start</button>
-                            <button onclick="stopTimer()" class="btn btn-stop">■ Stop</button>
+                            <wa-button onclick="startTimer()" class="btn btn-start" pill>▶ Start</wa-button>
+                            <wa-button onclick="stopTimer()" class="btn btn-stop" pill>■ Stop</wa-button>
                         </div>
                     </div>
-                </section>
+                </wa-card>
             </div>
 
             <div class="right-column">
-                <section class="card today-section" id="today-section" style="display: none;">
+                <wa-card class="card today-section" id="today-section" style="display: none;">
                     <div class="section-header">
                         <div>
                             <h2>Today's Log</h2>
                             <p>Sessions started in the last 24 hours</p>
                         </div>
-                        <span id="today-total" class="total-pill">0h 0m</span>
+                        <wa-badge id="today-total" class="total-pill" pill>0h 0m</wa-badge>
                     </div>
                     <div class="table-wrapper" id="today-table-wrapper" style="display: none;">
                         <table class="entries-table">
@@ -856,7 +1067,7 @@
                         <span>🌤</span>
                         <p>No time tracked yet today</p>
                     </div>
-                </section>
+                </wa-card>
 
                 <div id="entries" class="entries-container" style="display: none;"></div>
             </div>
@@ -865,7 +1076,7 @@
 </div>
 
 <div id="loading" class="loading-overlay" style="display: none;">
-    <div class="spinner"></div>
+    <wa-spinner class="spinner" size="large"></wa-spinner>
     <p>Loading...</p>
 </div>
 
@@ -1010,6 +1221,55 @@
     const todayPlaceholder = document.getElementById('today-placeholder');
     const todayTotal = document.getElementById('today-total');
 
+    function createWaOption(value, label, dataset = {}) {
+        const option = document.createElement('wa-option');
+        option.value = value === undefined || value === null ? '' : String(value);
+        option.textContent = label ?? '';
+
+        Object.entries(dataset).forEach(([key, val]) => {
+            if (val !== undefined && val !== null) {
+                option.dataset[key] = String(val);
+            }
+        });
+
+        return option;
+    }
+
+    function resetWaSelect(selectEl, placeholderLabel) {
+        if (!selectEl) {
+            return;
+        }
+
+        selectEl.innerHTML = '';
+        const placeholder = createWaOption('', placeholderLabel);
+        selectEl.appendChild(placeholder);
+        selectEl.value = '';
+        if (typeof selectEl.requestUpdate === 'function') {
+            selectEl.requestUpdate();
+        }
+    }
+
+    function getWaOptions(selectEl) {
+        if (!selectEl) {
+            return [];
+        }
+
+        return Array.from(selectEl.querySelectorAll('wa-option'));
+    }
+
+    function selectHasValue(selectEl, value) {
+        return getWaOptions(selectEl).some(option => option.value === value);
+    }
+
+    function getSelectedWaOption(selectEl) {
+        if (!selectEl) {
+            return null;
+        }
+
+        const value = selectEl.value ?? '';
+        return getWaOptions(selectEl).find(option => option.value === value) || null;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         TokenManager.updateTokenStatus();
 
@@ -1035,7 +1295,7 @@
 
     // Employee Management
     async function loadEmployees() {
-        document.getElementById('employee-select').innerHTML = '<option value="">-- Select Employee --</option>';
+        resetWaSelect(document.getElementById('employee-select'), '-- Select Employee --');
 
         try {
             showLoading(true);
@@ -1060,18 +1320,20 @@
 
     function populateEmployeeSelect(employees) {
         const employeeSelect = document.getElementById('employee-select');
-        employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
+        resetWaSelect(employeeSelect, '-- Select Employee --');
 
         if (Array.isArray(employees) && employees.length > 0) {
             employees.forEach(emp => {
-                const option = document.createElement('option');
-                option.value = emp.id;
-                option.textContent = `${emp.name} (${emp.email || 'No email'})`;
-                option.dataset.name = emp.name;
-                option.dataset.email = emp.email || '';
-                option.dataset.department = emp.department || '';
+                const option = createWaOption(emp.id, `${emp.name} (${emp.email || 'No email'})`, {
+                    name: emp.name,
+                    email: emp.email || '',
+                    department: emp.department || ''
+                });
                 employeeSelect.appendChild(option);
             });
+            if (typeof employeeSelect.requestUpdate === 'function') {
+                employeeSelect.requestUpdate();
+            }
             showNotification(`Loaded ${employees.length} employees`, 'success');
         } else {
             showNotification(`No employees found`, 'error');
@@ -1086,10 +1348,13 @@
             }
 
             const employeeSelect = document.getElementById('employee-select');
-            const hasOption = Array.from(employeeSelect.options).some(option => option.value === storedId);
+            const hasOption = selectHasValue(employeeSelect, storedId);
 
             if (hasOption) {
                 employeeSelect.value = storedId;
+                if (typeof employeeSelect.requestUpdate === 'function') {
+                    employeeSelect.requestUpdate();
+                }
                 selectEmployee();
             } else {
                 localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
@@ -1101,10 +1366,10 @@
 
     function selectEmployee() {
         const employeeSelect = document.getElementById('employee-select');
-        const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+        const selectedOption = getSelectedWaOption(employeeSelect);
 
         selectedEmployeeId = employeeSelect.value;
-        selectedEmployeeName = selectedOption?.dataset.name || selectedOption?.text || '';
+        selectedEmployeeName = selectedOption?.dataset.name || selectedOption?.textContent || '';
 
         const selectedEmployeeDiv = document.getElementById('selected-employee');
         const timerSection = document.getElementById('timer-section');
@@ -1120,11 +1385,11 @@
             if (selectedEmployeeId) {
                 metaDetails.push(`ID: ${selectedEmployeeId}`);
             }
-            const email = selectedOption.dataset.email || '';
+            const email = selectedOption?.dataset.email || '';
             if (email) {
                 metaDetails.push(email);
             }
-            const department = selectedOption.dataset.department || '';
+            const department = selectedOption?.dataset.department || '';
             if (department) {
                 metaDetails.push(department);
             }
@@ -1184,14 +1449,13 @@
 
     function populateProjectSelect(projects) {
         const projectSelect = document.getElementById('project-select');
-        projectSelect.innerHTML = '<option value="">-- Select Project --</option>';
+        resetWaSelect(projectSelect, '-- Select Project --');
 
         if (Array.isArray(projects) && projects.length > 0) {
             projects.forEach(project => {
-                const option = document.createElement('option');
-                option.value = project.name;
-                option.textContent = project.name;
-                option.dataset.projectId = project.id;
+                const option = createWaOption(project.name, project.name, {
+                    projectId: project.id
+                });
                 projectSelect.appendChild(option);
 
                 if (project && typeof project.id !== 'undefined') {
@@ -1199,6 +1463,9 @@
                 }
             });
 
+            if (typeof projectSelect.requestUpdate === 'function') {
+                projectSelect.requestUpdate();
+            }
             console.log(`Loaded ${projects.length} projects`);
         }
     }
@@ -1340,7 +1607,7 @@
 
     async function getSelectedProject() {
         const projectSelect = document.getElementById('project-select');
-        const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+        const selectedOption = getSelectedWaOption(projectSelect);
 
         if (selectedOption && selectedOption.dataset.projectId) {
             return {
@@ -1368,7 +1635,13 @@
     }
 
     function clearProjectInputs() {
-        document.getElementById('project-select').value = '';
+        const projectSelect = document.getElementById('project-select');
+        if (projectSelect) {
+            projectSelect.value = '';
+            if (typeof projectSelect.requestUpdate === 'function') {
+                projectSelect.requestUpdate();
+            }
+        }
         const projectInput = document.getElementById('project-name');
         if (projectInput) {
             projectInput.value = '';
@@ -1526,7 +1799,7 @@
         }
 
         const entriesHtml = entries.map(entry => {
-        const projectName = resolveProjectName(entry.projectId, entry.projectName || entry.project?.name);
+            const projectName = resolveProjectName(entry.projectId, entry.projectName || entry.project?.name);
             const isActive = !entry.endTime;
             const duration = isActive ? formatCurrentDuration(entry.startTime) : formatDuration(entry.startTime, entry.endTime);
             const startDisplay = formatDateTime(entry.startTime);
@@ -1534,12 +1807,12 @@
             const descriptionBlock = entry.description ? `<div class="entry-note"><strong>Notes:</strong> ${entry.description}</div>` : '';
 
             return `
-                <div class="entry ${isActive ? 'active' : ''}">
+                <wa-card class="entry ${isActive ? 'active' : ''}">
                     <div class="entry-header">
                         <div class="project-name">${projectName}</div>
-                        <div class="entry-status ${isActive ? 'status-running' : 'status-completed'}">
+                        <wa-badge class="entry-status ${isActive ? 'status-running' : 'status-completed'}" pill>
                             ${isActive ? 'Running' : 'Completed'}
-                        </div>
+                        </wa-badge>
                     </div>
                     <div class="entry-meta">
                         <div><strong>Duration:</strong> <span class="duration">${duration}</span></div>
@@ -1549,7 +1822,7 @@
                         <div><strong>Synced:</strong> ${entry.synced ? 'Yes' : 'No'}</div>
                         ${descriptionBlock}
                     </div>
-                </div>
+                </wa-card>
             `;
         }).join('');
 
@@ -1612,7 +1885,7 @@
                     <td>${start}</td>
                     <td>${end}</td>
                     <td>${duration}</td>
-                    <td><span class="entry-status ${statusClass}">${statusLabel}</span></td>
+                    <td><wa-badge class="entry-status ${statusClass}" pill>${statusLabel}</wa-badge></td>
                 </tr>
             `;
         }).join('');
@@ -1680,8 +1953,8 @@
         selectedEmployeeDiv.style.display = 'none';
         selectedEmployeeDiv.innerHTML = '';
 
-        document.getElementById('employee-select').innerHTML = '<option value="">-- Select Employee --</option>';
-        document.getElementById('project-select').innerHTML = '<option value="">-- Select Project --</option>';
+        resetWaSelect(document.getElementById('employee-select'), '-- Select Employee --');
+        resetWaSelect(document.getElementById('project-select'), '-- Select Project --');
         const projectInput = document.getElementById('project-name');
         if (projectInput) {
             projectInput.value = '';
@@ -1749,7 +2022,7 @@
 
             const projectSelect = document.getElementById('project-select');
             if (projectSelect) {
-                const match = Array.from(projectSelect.options).find(option => option.dataset.projectId === key);
+                const match = getWaOptions(projectSelect).find(option => option.dataset.projectId === key);
                 if (match && match.textContent) {
                     const resolved = match.textContent.trim();
                     if (resolved.length > 0) {

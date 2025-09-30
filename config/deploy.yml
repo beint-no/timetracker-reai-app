@@ -1,5 +1,5 @@
-service: shopify
-image: reai210/shopify
+service: reai-time-tracker
+image: reai210/reai-time-tracker
 
 # set app to point to server IP in .ssh/config if you want to login with ssh app to deploy server
 servers:

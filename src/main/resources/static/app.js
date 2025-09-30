@@ -1,10 +1,8 @@
-// Global state
 let selectedEmployeeId = null;
 let selectedEmployeeName = null;
 let durationInterval = null;
 let refreshInterval = null;
 
-// DOM Elements
 const employeeSelect = document.getElementById('employee-select');
 const selectedEmployeeDiv = document.getElementById('selected-employee');
 const timerSection = document.getElementById('timer-section');

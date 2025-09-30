@@ -112,4 +112,4 @@ yarn-error.log*
 *.ear
 *.zip
 *.tar.gz
-*.rar
+*.rar.env

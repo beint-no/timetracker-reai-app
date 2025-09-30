@@ -4,27 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReAI Time Tracker</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.0.0-beta.6/dist/styles/themes/awesome.css">
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.0.0-beta.6/dist/webawesome.js"></script>
-    <script nomodule src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+
+    <!-- Web Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
     <style>
         :root {
-            --color-bg: #f5f7fb;
-            --color-surface: #ffffff;
-            --color-surface-alt: #f8f9ff;
-            --color-primary: #5561ff;
-            --color-primary-hover: #434de7;
-            --color-danger: #ff6b6b;
-            --color-danger-hover: #f05252;
-            --color-text: #1f2933;
-            --color-muted: #6b7280;
-            --color-border: #dfe4f4;
-            --color-border-strong: rgba(85, 97, 255, 0.35);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.08);
-            --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
-            --radius-lg: 18px;
-            --radius-md: 12px;
-            --radius-sm: 8px;
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         * {
@@ -34,2102 +27,1362 @@
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8fafc;
             min-height: 100vh;
+            padding: 2rem 1rem;
         }
 
-        .app-shell {
-            width: min(1120px, 100%);
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 40px 32px 60px;
         }
 
-        .app-header {
-            background: var(--color-surface);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            padding: 28px 32px;
+        /* Remove wa-card borders */
+        wa-card {
+            --border-width: 0;
+            --border-radius: 16px;
+            --padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Header */
+        .header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 24px;
-            margin-bottom: 32px;
-            border: 1px solid rgba(85, 97, 255, 0.08);
+            gap: 2rem;
+            flex-wrap: wrap;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 1rem;
         }
 
-        .brand-symbol {
+        .brand-icon {
             width: 56px;
             height: 56px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #5561ff, #7a58ff);
-            display: grid;
-            place-items: center;
-            color: #ffffff;
-            font-size: 26px;
-            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
         }
 
         .brand-text h1 {
-            font-size: 26px;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--color-text);
-            margin-bottom: 4px;
+            color: #1e293b;
         }
 
         .brand-text p {
-            font-size: 14px;
-            color: var(--color-muted);
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
         }
 
         .header-actions {
             display: flex;
+            gap: 0.75rem;
             align-items: center;
-            gap: 12px;
         }
 
-        .header-actions .btn-sync {
-            padding: 10px 18px;
-            font-size: 14px;
-        }
-
-        .header-actions wa-button.btn-sync::part(base) {
-            padding: 10px 18px;
-            font-size: 14px;
-        }
-
-        .token-status {
-            background: #eef2ff;
-            color: #373f8a;
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            border: 1px solid rgba(85, 97, 255, 0.18);
-        }
-
-        .token-status.valid {
-            background: #e0f8ed;
-            color: #166c44;
-            border-color: rgba(34, 197, 94, 0.25);
-        }
-
-        .token-status.invalid {
-            background: #ffe4e6;
-            color: #b42318;
-            border-color: rgba(244, 63, 94, 0.25);
-        }
-
-        wa-badge.token-status::part(base) {
-            background: #eef2ff;
-            color: #373f8a;
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            border: 1px solid rgba(85, 97, 255, 0.18);
-        }
-
-        wa-badge.token-status.valid::part(base) {
-            background: #e0f8ed;
-            color: #166c44;
-            border-color: rgba(34, 197, 94, 0.25);
-        }
-
-        wa-badge.token-status.invalid::part(base) {
-            background: #ffe4e6;
-            color: #b42318;
-            border-color: rgba(244, 63, 94, 0.25);
-        }
-
-        .container {
-            display: block;
-        }
-
-        .layout {
+        /* Grid */
+        .grid {
             display: grid;
-            grid-template-columns: 340px 1fr;
-            gap: 28px;
+            grid-template-columns: 380px 1fr;
+            gap: 1.5rem;
             align-items: start;
         }
 
-        .left-column {
+        /* Section */
+        .section-head {
             display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .right-column {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--color-surface);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            padding: 28px;
-            border: 1px solid rgba(85, 97, 255, 0.08);
-        }
-
-        wa-card.card {
-            display: block;
-        }
-
-        wa-card.card::part(base) {
-            background: var(--color-surface);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            padding: 28px;
-            border: 1px solid rgba(85, 97, 255, 0.08);
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
             align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        .panel-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--color-text);
-        }
-
-        .panel-header p {
-            font-size: 13px;
-            color: var(--color-muted);
-            margin-top: 4px;
-        }
-
-        select,
-        input {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
-            font-size: 15px;
-            background: #ffffff;
-            color: var(--color-text);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        select:focus,
-        input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(85, 97, 255, 0.12);
-        }
-
-        wa-select,
-        wa-input {
-            width: 100%;
-            display: block;
-        }
-
-        wa-select::part(combobox),
-        wa-input::part(base) {
-            padding: 14px 16px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
-            font-size: 15px;
-            background: #ffffff;
-            color: var(--color-text);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        wa-select:focus-within::part(combobox),
-        wa-input:focus-within::part(base) {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(85, 97, 255, 0.12);
-        }
-
-        .field {
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+            border-radius: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .field-label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--color-muted);
-        }
-
-        .selected-info {
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 20px;
-            padding: 18px;
-            border-radius: var(--radius-md);
-            border: 1px dashed rgba(85, 97, 255, 0.25);
-            background: var(--color-surface-alt);
-        }
-
-        .selected-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--color-muted);
-            font-weight: 600;
-        }
-
-        .selected-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--color-text);
-        }
-
-        .selected-meta {
-            font-size: 13px;
-            color: var(--color-muted);
-        }
-
-        .timer-section.is-running {
-            border-color: var(--color-border-strong);
-            box-shadow: 0 20px 44px rgba(85, 97, 255, 0.12);
-        }
-
-        wa-card.timer-section.is-running::part(base) {
-            border-color: var(--color-border-strong);
-            box-shadow: 0 20px 44px rgba(85, 97, 255, 0.12);
-        }
-
-        .status-badge {
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            background: #eef2ff;
-            color: #3d44a6;
-            border: 1px solid rgba(85, 97, 255, 0.25);
-        }
-
-        .status-running {
-            background: rgba(85, 97, 255, 0.14);
-            color: #2b34c7;
-            border-color: rgba(85, 97, 255, 0.35);
-        }
-
-        .status-idle {
-            background: rgba(148, 163, 184, 0.15);
-            color: #4b5563;
-            border-color: rgba(148, 163, 184, 0.3);
-        }
-
-        wa-badge.status-badge::part(base) {
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            background: #eef2ff;
-            color: #3d44a6;
-            border: 1px solid rgba(85, 97, 255, 0.25);
-        }
-
-        wa-badge.status-badge.status-running::part(base) {
-            background: rgba(85, 97, 255, 0.14);
-            color: #2b34c7;
-            border-color: rgba(85, 97, 255, 0.35);
-        }
-
-        wa-badge.status-badge.status-idle::part(base) {
-            background: rgba(148, 163, 184, 0.15);
-            color: #4b5563;
-            border-color: rgba(148, 163, 184, 0.3);
-        }
-
-        .timer-display {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            padding: 26px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
-            background: linear-gradient(135deg, #f4f6ff 0%, #ffffff 55%);
-            margin-bottom: 26px;
-            min-height: 152px;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .timer-section.is-running .timer-display {
-            border-color: rgba(85, 97, 255, 0.4);
-            box-shadow: 0 16px 32px rgba(85, 97, 255, 0.12);
-        }
-
-        .timer-empty {
-            text-align: center;
-            color: var(--color-muted);
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            color: var(--primary);
+            flex-shrink: 0;
         }
 
-        .timer-empty .icon {
-            font-size: 36px;
+        .section-title h2 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
         }
 
-        .timer-empty small {
-            font-size: 12px;
-            color: #94a3b8;
+        .section-title p {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
         }
 
-        .timer-running {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
+        /* Form */
+        .field {
+            margin-bottom: 1.5rem;
         }
 
-        .timer-digits {
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 46px;
+        .label {
+            display: block;
+            font-size: 0.875rem;
             font-weight: 600;
-            letter-spacing: 0.08em;
-            color: var(--color-primary);
+            color: #475569;
+            margin-bottom: 0.5rem;
         }
 
-        .timer-details {
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: white;
+            color: #1e293b;
+            transition: all 0.2s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Employee Info */
+        .employee-box {
+            padding: 1rem;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        .emp-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #0284c7;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .emp-name {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .emp-meta {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        /* Timer */
+        .timer {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .timer.active {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 8px 40px rgba(59, 130, 246, 0.5); }
+        }
+
+        .timer-time {
+            font-family: 'Courier New', monospace;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
         }
 
         .timer-project {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--color-text);
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
         }
 
         .timer-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            font-size: 13px;
-            color: var(--color-muted);
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.5rem;
         }
 
-        .timer-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
+        .empty-icon {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
         }
 
-        .button-group {
+        /* Buttons */
+        .btn-group {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
         }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border-radius: var(--radius-md);
-            font-size: 15px;
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat.green {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #64748b;
             font-weight: 600;
-            padding: 12px 20px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+            margin-bottom: 0.5rem;
         }
 
-        wa-button.btn::part(base) {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border-radius: var(--radius-md);
-            font-size: 15px;
-            font-weight: 600;
-            padding: 12px 20px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--primary);
         }
 
-        .btn-start {
-            background: var(--color-primary);
-            color: #ffffff;
-            box-shadow: 0 14px 28px rgba(85, 97, 255, 0.22);
+        .stat.green .stat-value {
+            color: var(--success);
         }
 
-        .btn-start:hover {
-            background: var(--color-primary-hover);
-            transform: translateY(-1px);
+        /* Table */
+        .table-box {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        wa-button.btn-start::part(base) {
-            background: var(--color-primary);
-            color: #ffffff;
-            box-shadow: 0 14px 28px rgba(85, 97, 255, 0.22);
-        }
-
-        wa-button.btn-start:hover::part(base) {
-            background: var(--color-primary-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-stop {
-            background: var(--color-danger);
-            color: #ffffff;
-            box-shadow: 0 14px 28px rgba(255, 107, 107, 0.22);
-        }
-
-        .btn-stop:hover {
-            background: var(--color-danger-hover);
-            transform: translateY(-1px);
-        }
-
-        wa-button.btn-stop::part(base) {
-            background: var(--color-danger);
-            color: #ffffff;
-            box-shadow: 0 14px 28px rgba(255, 107, 107, 0.22);
-        }
-
-        wa-button.btn-stop:hover::part(base) {
-            background: var(--color-danger-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-sync {
-            background: #1f2933;
-            color: #ffffff;
-            padding: 12px 22px;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .btn-sync:hover {
-            background: #111827;
-            transform: translateY(-1px);
-        }
-
-        wa-button.btn-sync::part(base) {
-            background: #1f2933;
-            color: #ffffff;
-            padding: 12px 22px;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-sm);
-        }
-
-        wa-button.btn-sync:hover::part(base) {
-            background: #111827;
-            transform: translateY(-1px);
-        }
-
-        .btn-logout {
-            background: #ffffff;
-            color: var(--color-text);
-            border: 1px solid var(--color-border);
-            padding: 10px 20px;
-        }
-
-        .btn-logout:hover {
-            border-color: var(--color-primary);
-            color: var(--color-primary);
-            box-shadow: var(--shadow-sm);
-        }
-
-        wa-button.btn-logout::part(base) {
-            background: #ffffff;
-            color: var(--color-text);
-            border: 1px solid var(--color-border);
-            padding: 10px 20px;
-        }
-
-        wa-button.btn-logout:hover::part(base) {
-            border-color: var(--color-primary);
-            color: var(--color-primary);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .entries-section,
-        .today-section {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .section-header h2 {
-            font-size: 22px;
-            font-weight: 600;
-            color: var(--color-text);
-        }
-
-        .section-header p {
-            font-size: 13px;
-            color: var(--color-muted);
-            margin-top: 4px;
-        }
-
-        .section-header .total-pill {
-            margin-left: auto;
-        }
-
-        .table-wrapper {
-            overflow: auto;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
-        }
-
-        .entries-table {
+        table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--color-surface);
-            min-width: 540px;
+            background: white;
         }
 
-        .entries-table thead {
-            background: #eef2ff;
+        thead {
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
         }
 
-        .entries-table th,
-        .entries-table td {
-            padding: 14px 16px;
+        th {
+            padding: 0.875rem 1rem;
             text-align: left;
-            font-size: 13px;
-            color: var(--color-text);
-        }
-
-        .entries-table th {
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #4b5563;
+            font-size: 0.875rem;
         }
 
-        .entries-table tbody tr:nth-child(odd) {
-            background: var(--color-surface-alt);
+        td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.95rem;
+            color: #475569;
         }
 
-        .entries-table tbody tr:hover {
-            background: rgba(85, 97, 255, 0.08);
+        tr:hover td {
+            background: #f8fafc;
         }
 
-        .entries-table .empty-row {
-            text-align: center;
-            color: var(--color-muted);
+        tr:last-child td {
+            border-bottom: none;
         }
 
-        .entries-table .empty-row td {
-            text-align: center;
-        }
-
-        .entries-table .entry-status {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .entries-table wa-badge.entry-status::part(base) {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .entries-container {
+        /* Entry */
+        .entries {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            max-height: 540px;
-            overflow-y: auto;
-            padding-right: 6px;
-        }
-
-        .entries-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .entries-container::-webkit-scrollbar-thumb {
-            background: rgba(59, 72, 99, 0.25);
-            border-radius: 999px;
-        }
-
-        .entries-placeholder,
-        .today-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: 40px 20px;
-            border-radius: var(--radius-md);
-            background: var(--color-surface-alt);
-            border: 1px dashed var(--color-border);
-            color: var(--color-muted);
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .entries-placeholder span,
-        .today-placeholder span {
-            font-size: 24px;
-        }
-
-        .total-pill {
-            background: rgba(85, 97, 255, 0.12);
-            color: var(--color-primary);
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-
-        wa-badge.total-pill::part(base) {
-            background: rgba(85, 97, 255, 0.12);
-            color: var(--color-primary);
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
+            gap: 1rem;
         }
 
         .entry {
-            background: var(--color-surface);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
-            padding: 22px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+            border-left: 3px solid #e2e8f0;
         }
 
         .entry:hover {
-            border-color: var(--color-border-strong);
-            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
+            border-left-color: var(--primary);
         }
 
         .entry.active {
-            border-color: rgba(85, 97, 255, 0.4);
-            box-shadow: 0 20px 36px rgba(85, 97, 255, 0.12);
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-left-color: var(--danger);
         }
 
-        wa-card.entry::part(base) {
-            background: var(--color-surface);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
-            padding: 22px;
+        .entry-head {
             display: flex;
-            flex-direction: column;
-            gap: 14px;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
-        wa-card.entry:hover::part(base) {
-            border-color: var(--color-border-strong);
-            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
-            transform: translateY(-2px);
+        .entry-title {
+            font-size: 1.0625rem;
+            font-weight: 700;
+            color: #1e293b;
         }
 
-        wa-card.entry.active::part(base) {
-            border-color: rgba(85, 97, 255, 0.4);
-            box-shadow: 0 20px 36px rgba(85, 97, 255, 0.12);
+        .entry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
         }
 
-        .entry-header {
+        .entry-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 16px;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
         }
 
-        .entry .project-name {
-            font-size: 18px;
+        .entry-item wa-icon {
+            color: var(--primary);
+            font-size: 0.875rem;
+        }
+
+        .entry-label {
             font-weight: 600;
-            color: var(--color-text);
+            color: #475569;
         }
 
-        .entry-status {
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 12px;
+        /* Empty */
+        .empty {
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .empty wa-icon {
+            font-size: 3.5rem;
+            color: #cbd5e1;
+            opacity: 0.4;
+            margin-bottom: 1rem;
+        }
+
+        .empty h3 {
+            font-size: 1.125rem;
             font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            background: #eef2ff;
-            color: #3d44a6;
+            color: #64748b;
+            margin-bottom: 0.5rem;
         }
 
-        .entry-status.status-running {
-            background: rgba(255, 107, 107, 0.18);
-            color: #b91c1c;
+        .empty p {
+            font-size: 0.95rem;
+            color: #94a3b8;
         }
 
-        .entry-status.status-completed {
-            background: rgba(34, 197, 94, 0.16);
-            color: #166c44;
-        }
-
-        wa-badge.entry-status::part(base) {
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            background: #eef2ff;
-            color: #3d44a6;
-        }
-
-        wa-badge.entry-status.status-running::part(base) {
-            background: rgba(255, 107, 107, 0.18);
-            color: #b91c1c;
-        }
-
-        wa-badge.entry-status.status-completed::part(base) {
-            background: rgba(34, 197, 94, 0.16);
-            color: #166c44;
-        }
-
-        .entry-meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px 18px;
-            font-size: 13px;
-            color: var(--color-muted);
-        }
-
-        .entry-meta div {
-            display: flex;
-            gap: 6px;
-            align-items: baseline;
-        }
-
-        .entry-meta strong {
-            font-weight: 600;
-            color: var(--color-text);
-        }
-
-        .entry-note {
-            grid-column: 1 / -1;
-            color: var(--color-text);
-        }
-
-        .duration {
-            color: var(--color-primary);
-            font-weight: 700;
-        }
-
-        .loading-overlay {
+        /* Loading */
+        .loading {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.18);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            display: none;
             justify-content: center;
-            gap: 16px;
-            z-index: 1200;
+            align-items: center;
+            z-index: 9999;
         }
 
-        .spinner {
-            --indicator-color: var(--color-primary);
-            --track-color: rgba(255, 255, 255, 0.35);
-            --track-width: 4px;
+        .loading.show {
+            display: flex;
         }
 
-        .loading-overlay p {
-            color: #ffffff;
-            font-weight: 600;
+        .loading-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem 3rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            text-align: center;
         }
 
-        .notification {
+        .loading-content wa-spinner {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Alert */
+        wa-alert {
             position: fixed;
-            top: 28px;
-            right: 32px;
-            padding: 14px 22px;
-            border-radius: var(--radius-md);
-            color: #ffffff;
-            font-weight: 600;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-            transform: translateY(-20px);
-            opacity: 0;
-            transition: opacity 0.25s ease, transform 0.25s ease;
-            z-index: 1300;
+            top: 2rem;
+            right: 2rem;
+            z-index: 10000;
+            min-width: 320px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
 
-        .notification.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .notification.success {
-            background: #22c55e;
-        }
-
-        .notification.error {
-            background: #f05252;
-        }
-        @media (max-width: 1080px) {
-            .app-shell {
-                padding: 32px 24px 40px;
-            }
-
-            .layout {
-                grid-template-columns: minmax(0, 1fr);
-            }
-
-            .header-actions {
-                flex-wrap: wrap;
-                justify-content: flex-end;
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
             }
         }
 
-        @media (max-width: 720px) {
-            .app-header {
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 20px;
             }
 
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .button-group {
+            .btn-group {
                 grid-template-columns: 1fr;
             }
 
-            .timer-digits {
-                font-size: 36px;
-            }
-
-            .entries-container {
-                max-height: none;
-            }
-
-            .table-wrapper {
-                border-radius: var(--radius-sm);
-            }
-
-            .notification {
-                left: 20px;
-                right: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .app-shell {
-                padding: 24px 18px 36px;
-            }
-
-            .card {
-                padding: 22px;
-            }
-
-            wa-card.card::part(base) {
-                padding: 22px;
-            }
-
-            .panel-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .header-actions {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
+            .timer-time {
+                font-size: 2.5rem;
             }
         }
     </style>
 </head>
 <body>
-<div class="app-shell">
-    <header class="app-header">
-        <div class="brand">
-            <div class="brand-symbol">⏱</div>
-            <div class="brand-text">
-                <h1>ReAI Time Tracker</h1>
-                <p>Clockify-inspired productivity dashboard</p>
-            </div>
-        </div>
-        <div class="header-actions">
-            <wa-badge id="token-status" class="token-status" pill>Token: Checking...</wa-badge>
-            <wa-button onclick="syncToReai()" class="btn btn-sync" pill>🔄 Sync to ReAI</wa-button>
-            <wa-button onclick="logout()" class="btn btn-logout" pill>Logout</wa-button>
-        </div>
-    </header>
-
     <div class="container">
-        <div class="layout">
-            <div class="left-column">
-                <wa-card class="card employee-section">
-                    <div class="panel-header">
-                        <div>
+        <!-- Header -->
+        <wa-card>
+            <div class="header">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <wa-icon name="clock" style="font-size: 1.75rem;"></wa-icon>
+                    </div>
+                    <div class="brand-text">
+                        <h1>ReAI Time Tracker</h1>
+                        <p>Professional Time Management</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <wa-badge id="token-status" variant="neutral" pill>Checking...</wa-badge>
+                    <wa-button variant="success" size="small" id="sync-btn" disabled>
+                        <wa-icon name="sync-alt" slot="prefix"></wa-icon>
+                        Sync
+                    </wa-button>
+                    <wa-button variant="default" size="small" onclick="logout()">
+                        <wa-icon name="sign-out-alt" slot="prefix"></wa-icon>
+                        Logout
+                    </wa-button>
+                </div>
+            </div>
+        </wa-card>
+
+        <!-- Main -->
+        <div class="grid">
+            <!-- Left -->
+            <div>
+                <!-- Employee -->
+                <wa-card>
+                    <div class="section-head">
+                        <div class="icon-box">
+                            <wa-icon name="user"></wa-icon>
+                        </div>
+                        <div class="section-title">
                             <h2>Team Member</h2>
-                            <p>Pick whose time you are logging</p>
+                            <p>Select employee</p>
                         </div>
                     </div>
-                    <wa-select id="employee-select" placeholder="-- Select Employee --" onchange="selectEmployee()">
-                        <wa-option value="">-- Select Employee --</wa-option>
-                    </wa-select>
-                    <div id="selected-employee" class="selected-info" style="display: none;"></div>
+                    <div class="field">
+                        <label class="label">Employee</label>
+                        <select id="employee-select" onchange="handleEmployeeChange(this)">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                    <div id="selected-employee" style="display: none;">
+                        <wa-divider></wa-divider>
+                        <div class="employee-box">
+                            <div class="emp-label">Tracking for</div>
+                            <div class="emp-name" id="employee-name"></div>
+                            <div class="emp-meta" id="employee-meta"></div>
+                        </div>
+                    </div>
                 </wa-card>
 
-                <wa-card class="card timer-section" id="timer-section" style="display: none;">
-                    <div class="panel-header">
-                        <div>
-                            <h2>Timer</h2>
-                            <p>Launch focused sessions instantly</p>
+                <!-- Timer -->
+                <wa-card id="timer-section" style="display: none;">
+                    <div class="section-head">
+                        <div class="icon-box">
+                            <wa-icon name="play-circle"></wa-icon>
                         </div>
-                        <wa-badge id="timer-status-badge" class="status-badge status-idle" pill>Idle</wa-badge>
-                    </div>
-
-                    <div id="current-timer" class="timer-display">
-                        <div class="timer-empty">
-                            <span class="icon">⏱</span>
-                            <p>No active timer yet</p>
-                            <small>Select a project and press start</small>
+                        <div class="section-title">
+                            <h2>Timer Control</h2>
+                            <p>Start and stop</p>
                         </div>
                     </div>
 
-                    <div class="timer-controls">
-                        <div class="field">
-                            <label for="project-select" class="field-label">Project</label>
-                            <wa-select id="project-select" placeholder="-- Select Project --">
-                                <wa-option value="">-- Select Project --</wa-option>
-                            </wa-select>
+                    <div id="current-timer" class="timer">
+                        <div class="empty-icon">
+                            <wa-icon name="hourglass-half"></wa-icon>
                         </div>
+                        <strong>No active timer</strong>
+                        <p style="font-size: 0.875rem; color: #64748b; margin-top: 0.5rem;">Select project to start</p>
+                    </div>
 
-                        <div class="field">
-                            <label for="project-name" class="field-label">Project name</label>
-                            <wa-input type="text"
-                                      id="project-name"
-                                      placeholder="Select a project from the list"
-                                      maxlength="100"
-                                      disabled></wa-input>
-                        </div>
+                    <div class="field">
+                        <label class="label">Project</label>
+                        <select id="project-select">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
 
-                        <div class="button-group">
-                            <wa-button onclick="startTimer()" class="btn btn-start" pill>▶ Start</wa-button>
-                            <wa-button onclick="stopTimer()" class="btn btn-stop" pill>■ Stop</wa-button>
-                        </div>
+                    <div class="btn-group">
+                        <wa-button variant="primary" onclick="startTimer()">
+                            <wa-icon name="play" slot="prefix"></wa-icon>
+                            Start
+                        </wa-button>
+                        <wa-button variant="danger" onclick="stopTimer()">
+                            <wa-icon name="stop" slot="prefix"></wa-icon>
+                            Stop
+                        </wa-button>
                     </div>
                 </wa-card>
             </div>
 
-            <div class="right-column">
-                <wa-card class="card today-section" id="today-section" style="display: none;">
-                    <div class="section-header">
-                        <div>
-                            <h2>Today's Log</h2>
-                            <p>Sessions started in the last 24 hours</p>
+            <!-- Right -->
+            <div>
+                <!-- Today -->
+                <wa-card id="today-section" style="display: none;">
+                    <div class="section-head">
+                        <div class="icon-box">
+                            <wa-icon name="calendar-day"></wa-icon>
                         </div>
-                        <wa-badge id="today-total" class="total-pill" pill>0h 0m</wa-badge>
+                        <div class="section-title">
+                            <h2>Today's Summary</h2>
+                            <p>Last 24 hours</p>
+                        </div>
                     </div>
-                    <div class="table-wrapper" id="today-table-wrapper" style="display: none;">
-                        <table class="entries-table">
-                            <thead>
-                                <tr>
-                                    <th>Project</th>
-                                    <th>Start</th>
-                                    <th>End</th>
-                                    <th>Duration</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="today-entries-body"></tbody>
-                        </table>
+
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-label">Total Time</div>
+                            <div class="stat-value" id="today-total">0h 0m</div>
+                        </div>
+                        <div class="stat green">
+                            <div class="stat-label">Entries</div>
+                            <div class="stat-value" id="today-count">0</div>
+                        </div>
                     </div>
-                    <div id="today-placeholder" class="today-placeholder">
-                        <span>🌤</span>
-                        <p>No time tracked yet today</p>
+
+                    <wa-divider></wa-divider>
+
+                    <div id="today-table-wrapper" style="display: none;">
+                        <div class="table-box">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="today-entries-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="today-placeholder" class="empty">
+                        <wa-icon name="sun"></wa-icon>
+                        <h3>No Activity Today</h3>
+                        <p>Start tracking to see stats</p>
                     </div>
                 </wa-card>
 
-                <div id="entries" class="entries-container" style="display: none;"></div>
+                <!-- Entries -->
+                <wa-card id="entries-section" style="display: none;">
+                    <div class="section-head">
+                        <div class="icon-box">
+                            <wa-icon name="list"></wa-icon>
+                        </div>
+                        <div class="section-title">
+                            <h2>All Entries</h2>
+                            <p>Complete history</p>
+                        </div>
+                    </div>
+                    <div id="entries-container" class="entries"></div>
+                </wa-card>
             </div>
         </div>
     </div>
-</div>
 
-<div id="loading" class="loading-overlay" style="display: none;">
-    <wa-spinner class="spinner" size="large"></wa-spinner>
-    <p>Loading...</p>
-</div>
+    <!-- Loading -->
+    <div id="loading" class="loading">
+        <div class="loading-content">
+            <wa-spinner></wa-spinner>
+            <div style="font-weight: 600; color: #475569;">Loading...</div>
+        </div>
+    </div>
 
-<script>
-    // Token Management
-    class TokenManager {
-        static saveToken(token) {
-            try {
-                localStorage.setItem('reai_access_token', token);
-                this.updateTokenStatus();
-                console.log('Token saved to localStorage');
-            } catch (error) {
-                console.error('Failed to save token:', error);
-            }
-        }
+    <!-- Alert -->
+    <wa-alert id="notification" variant="primary" duration="4000" closable style="display: none;"></wa-alert>
 
-        static getToken() {
-            const storedToken = localStorage.getItem('reai_access_token');
-            if (storedToken && !this.isTokenExpired(storedToken)) {
-                return storedToken;
+    <script>
+        // Token Manager
+        class TokenManager {
+            static saveToken(token) {
+                try {
+                    localStorage.setItem('reai_access_token', token);
+                    this.updateTokenStatus();
+                } catch (error) {
+                    console.error('Failed to save token:', error);
+                }
             }
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlToken = urlParams.get('access_token');
-
-            if (urlToken && !this.isTokenExpired(urlToken)) {
-                this.saveToken(urlToken);
-                window.history.replaceState({}, document.title, window.location.pathname);
-                return urlToken;
-            }
-
-            if (storedToken) {
-                this.clearToken();
-            }
-
-            return null;
-        }
-
-        static clearToken() {
-            localStorage.removeItem('reai_access_token');
-            this.updateTokenStatus();
-            console.log('Token cleared from localStorage');
-        }
-
-        static isTokenExpired(token) {
-            if (!token) return true;
-
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const expiry = payload.exp * 1000;
-                const isExpired = Date.now() >= expiry;
-
-                if (isExpired) {
-                    console.log('Token is expired');
+            static getToken() {
+                const storedToken = localStorage.getItem('reai_access_token');
+                if (storedToken && !this.isTokenExpired(storedToken)) {
+                    return storedToken;
                 }
 
-                return isExpired;
-            } catch (error) {
-                console.error('Invalid token format:', error);
-                return true;
-            }
-        }
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlToken = urlParams.get('access_token');
 
-        static updateTokenStatus() {
-            const statusElement = document.getElementById('token-status');
-            const token = this.getToken();
+                if (urlToken && !this.isTokenExpired(urlToken)) {
+                    this.saveToken(urlToken);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return urlToken;
+                }
 
-            if (token) {
-                statusElement.textContent = 'Token: Valid';
-                statusElement.className = 'token-status valid';
-            } else {
-                statusElement.textContent = 'Token: Invalid/Missing';
-                statusElement.className = 'token-status invalid';
-            }
-        }
+                if (storedToken) {
+                    this.clearToken();
+                }
 
-        static getTokenPayload(token) {
-            try {
-                return JSON.parse(atob(token.split('.')[1]));
-            } catch (error) {
                 return null;
             }
-        }
-    }
 
-    // API Client
-    class APIClient {
-        static async makeRequest(url, options = {}) {
-            const token = TokenManager.getToken();
-
-            if (!token) {
-                throw new Error('No valid access token available. Please login again.');
+            static clearToken() {
+                localStorage.removeItem('reai_access_token');
+                this.updateTokenStatus();
             }
 
-            const headers = {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                ...options.headers
-            };
+            static isTokenExpired(token) {
+                if (!token) return true;
 
-            const response = await fetch(url, {
-                ...options,
-                headers
-            });
-
-            if (response.status === 401) {
-                TokenManager.clearToken();
-                showNotification('Authentication failed. Please login again.', 'error');
-                throw new Error('Authentication failed');
-            }
-
-            return response;
-        }
-
-        static async get(url) {
-            return this.makeRequest(url, { method: 'GET' });
-        }
-
-        static async post(url, data = null) {
-            const options = { method: 'POST' };
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
-            return this.makeRequest(url, options);
-        }
-    }
-
-    let selectedEmployeeId = null;
-    let selectedEmployeeName = null;
-    let durationInterval = null;
-    let isStarting = false;
-    let currentTimerData = null;
-    let entriesCache = [];
-    const projectMap = new Map();
-    const SELECTED_EMPLOYEE_KEY = 'reai_selected_employee_id';
-
-    const entriesContainer = document.getElementById('entries');
-    const entriesSection = document.getElementById('entries-section');
-    const todaySection = document.getElementById('today-section');
-    const todayTableWrapper = document.getElementById('today-table-wrapper');
-    const todayEntriesBody = document.getElementById('today-entries-body');
-    const todayPlaceholder = document.getElementById('today-placeholder');
-    const todayTotal = document.getElementById('today-total');
-
-    function createWaOption(value, label, dataset = {}) {
-        const option = document.createElement('wa-option');
-        option.value = value === undefined || value === null ? '' : String(value);
-        option.textContent = label ?? '';
-
-        Object.entries(dataset).forEach(([key, val]) => {
-            if (val !== undefined && val !== null) {
-                option.dataset[key] = String(val);
-            }
-        });
-
-        return option;
-    }
-
-    function resetWaSelect(selectEl, placeholderLabel) {
-        if (!selectEl) {
-            return;
-        }
-
-        selectEl.innerHTML = '';
-        const placeholder = createWaOption('', placeholderLabel);
-        selectEl.appendChild(placeholder);
-        selectEl.value = '';
-        if (typeof selectEl.requestUpdate === 'function') {
-            selectEl.requestUpdate();
-        }
-    }
-
-    function getWaOptions(selectEl) {
-        if (!selectEl) {
-            return [];
-        }
-
-        return Array.from(selectEl.querySelectorAll('wa-option'));
-    }
-
-    function selectHasValue(selectEl, value) {
-        return getWaOptions(selectEl).some(option => option.value === value);
-    }
-
-    function getSelectedWaOption(selectEl) {
-        if (!selectEl) {
-            return null;
-        }
-
-        const value = selectEl.value ?? '';
-        return getWaOptions(selectEl).find(option => option.value === value) || null;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        TokenManager.updateTokenStatus();
-
-        const token = TokenManager.getToken();
-        if (!token) {
-            showNotification('No access token found. Please login first.', 'error');
-            return;
-        }
-
-        loadEmployees();
-
-        document.getElementById('project-select').addEventListener('change', function() {
-            const projectInput = document.getElementById('project-name');
-            if (projectInput) {
-                projectInput.value = '';
-            }
-        });
-
-        setInterval(() => {
-            TokenManager.updateTokenStatus();
-        }, 30000);
-    });
-
-    // Employee Management
-    async function loadEmployees() {
-        resetWaSelect(document.getElementById('employee-select'), '-- Select Employee --');
-
-        try {
-            showLoading(true);
-
-            const response = await APIClient.get(`/api/employees`);
-
-            if (!response.ok) {
-                throw new Error(`Failed to load employees: ${response.status} ${response.statusText}`);
-            }
-
-            const employees = await response.json();
-            populateEmployeeSelect(employees);
-            restoreSelectedEmployee();
-
-        } catch (error) {
-            console.error('Error loading employees:', error);
-            showNotification(`Failed to load employees: ${error.message}`, 'error');
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    function populateEmployeeSelect(employees) {
-        const employeeSelect = document.getElementById('employee-select');
-        resetWaSelect(employeeSelect, '-- Select Employee --');
-
-        if (Array.isArray(employees) && employees.length > 0) {
-            employees.forEach(emp => {
-                const option = createWaOption(emp.id, `${emp.name} (${emp.email || 'No email'})`, {
-                    name: emp.name,
-                    email: emp.email || '',
-                    department: emp.department || ''
-                });
-                employeeSelect.appendChild(option);
-            });
-            if (typeof employeeSelect.requestUpdate === 'function') {
-                employeeSelect.requestUpdate();
-            }
-            showNotification(`Loaded ${employees.length} employees`, 'success');
-        } else {
-            showNotification(`No employees found`, 'error');
-        }
-    }
-
-    function restoreSelectedEmployee() {
-        try {
-            const storedId = localStorage.getItem(SELECTED_EMPLOYEE_KEY);
-            if (!storedId) {
-                return;
-            }
-
-            const employeeSelect = document.getElementById('employee-select');
-            const hasOption = selectHasValue(employeeSelect, storedId);
-
-            if (hasOption) {
-                employeeSelect.value = storedId;
-                if (typeof employeeSelect.requestUpdate === 'function') {
-                    employeeSelect.requestUpdate();
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const expiry = payload.exp * 1000;
+                    return Date.now() >= expiry;
+                } catch (error) {
+                    console.error('Invalid token format:', error);
+                    return true;
                 }
-                selectEmployee();
-            } else {
-                localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
-            }
-        } catch (error) {
-            console.warn('Unable to restore selected employee:', error);
-        }
-    }
-
-    function selectEmployee() {
-        const employeeSelect = document.getElementById('employee-select');
-        const selectedOption = getSelectedWaOption(employeeSelect);
-
-        selectedEmployeeId = employeeSelect.value;
-        selectedEmployeeName = selectedOption?.dataset.name || selectedOption?.textContent || '';
-
-        const selectedEmployeeDiv = document.getElementById('selected-employee');
-        const timerSection = document.getElementById('timer-section');
-
-        if (selectedEmployeeId) {
-            try {
-                localStorage.setItem(SELECTED_EMPLOYEE_KEY, selectedEmployeeId);
-            } catch (error) {
-                console.warn('Unable to persist selected employee:', error);
             }
 
-            const metaDetails = [];
-            if (selectedEmployeeId) {
-                metaDetails.push(`ID: ${selectedEmployeeId}`);
-            }
-            const email = selectedOption?.dataset.email || '';
-            if (email) {
-                metaDetails.push(email);
-            }
-            const department = selectedOption?.dataset.department || '';
-            if (department) {
-                metaDetails.push(department);
-            }
+            static updateTokenStatus() {
+                const statusElement = document.getElementById('token-status');
+                const token = this.getToken();
 
-            selectedEmployeeDiv.innerHTML = `
-                <span class="selected-label">Tracking time for</span>
-                <span class="selected-name">${selectedEmployeeName}</span>
-                <span class="selected-meta">${metaDetails.join(' &middot; ')}</span>
-            `;
-
-            selectedEmployeeDiv.style.display = 'flex';
-            timerSection.style.display = 'block';
-            if (entriesSection) {
-                entriesSection.style.display = 'block';
-            }
-            todaySection.style.display = 'block';
-
-            loadProjects();
-            loadCurrentTimer();
-            loadEntries();
-        } else {
-            try {
-                localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
-            } catch (error) {
-                console.warn('Unable to clear stored employee:', error);
-            }
-
-            selectedEmployeeDiv.style.display = 'none';
-            selectedEmployeeDiv.innerHTML = '';
-            timerSection.style.display = 'none';
-            if (entriesSection) {
-                entriesSection.style.display = 'none';
-            }
-            todaySection.style.display = 'none';
-            resetEntriesUI();
-            stopTimerDisplay();
-        }
-    }
-
-    // Project Management
-    async function loadProjects() {
-        try {
-            const response = await APIClient.get(`/api/employees/project`);
-
-            if (!response.ok) {
-                console.warn('Failed to load projects, using manual input only');
-                return;
-            }
-
-            const projects = await response.json();
-            populateProjectSelect(projects);
-
-        } catch (error) {
-            console.warn('Error loading projects:', error.message);
-        }
-    }
-
-    function populateProjectSelect(projects) {
-        const projectSelect = document.getElementById('project-select');
-        resetWaSelect(projectSelect, '-- Select Project --');
-
-        if (Array.isArray(projects) && projects.length > 0) {
-            projects.forEach(project => {
-                const option = createWaOption(project.name, project.name, {
-                    projectId: project.id
-                });
-                projectSelect.appendChild(option);
-
-                if (project && typeof project.id !== 'undefined') {
-                    projectMap.set(String(project.id), project.name);
+                if (token) {
+                    statusElement.textContent = 'Valid';
+                    statusElement.variant = 'success';
+                } else {
+                    statusElement.textContent = 'Invalid';
+                    statusElement.variant = 'danger';
                 }
-            });
-
-            if (typeof projectSelect.requestUpdate === 'function') {
-                projectSelect.requestUpdate();
             }
-            console.log(`Loaded ${projects.length} projects`);
-        }
-    }
-
-    async function loadCurrentTimer() {
-        if (!selectedEmployeeId) {
-            return;
         }
 
-        try {
-            const response = await APIClient.get(`/api/time/current?employeeId=${selectedEmployeeId}`);
+        // API Client
+        class APIClient {
+            static async makeRequest(url, options = {}) {
+                const token = TokenManager.getToken();
 
-            if (response.status === 404) {
-                stopTimerDisplay();
-                return;
-            }
+                if (!token) {
+                    throw new Error('No valid access token available. Please login again.');
+                }
 
-            if (!response.ok) {
-                throw new Error(`Failed to load current timer: ${response.status} ${response.statusText}`);
-            }
-
-            const timer = await response.json();
-
-            if (timer && timer.startTime) {
-                const resolvedProjectId = timer.projectId || timer.project?.id || null;
-                currentTimerData = {
-                    projectId: resolvedProjectId,
-                    projectName: resolveProjectName(resolvedProjectId, timer.projectName || timer.project?.name),
-                    startTime: timer.startTime,
-                    employeeName: selectedEmployeeName || timer.employeeName || ''
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
                 };
 
-                displayRunningTimer(currentTimerData);
-            } else {
-                stopTimerDisplay();
+                const response = await fetch(url, {
+                    ...options,
+                    headers
+                });
+
+                if (response.status === 401) {
+                    TokenManager.clearToken();
+                    showNotification('Authentication failed. Please login again.', 'danger');
+                    throw new Error('Authentication failed');
+                }
+
+                return response;
             }
 
-        } catch (error) {
-            console.warn('Unable to load current timer:', error.message);
-            stopTimerDisplay();
-        }
-    }
-
-    async function loadEntries() {
-        if (!selectedEmployeeId) {
-            return;
-        }
-
-        if (entriesContainer) {
-            entriesContainer.innerHTML = '';
-        }
-
-        try {
-            const response = await APIClient.get(`/api/time/entries?employeeId=${selectedEmployeeId}`);
-
-            if (!response.ok) {
-                throw new Error(`Failed to load entries: ${response.status} ${response.statusText}`);
+            static async get(url) {
+                return this.makeRequest(url, { method: 'GET' });
             }
 
-            const entries = await response.json();
-            entriesCache = Array.isArray(entries) ? entries : [];
-
-            renderEntries(entriesCache);
-            renderTodayEntries(entriesCache);
-
-        } catch (error) {
-            console.error('Error loading time entries:', error);
-            if (entriesContainer) {
-                entriesContainer.innerHTML = '';
-            }
-            renderTodayEntries([]);
-        }
-    }
-
-    function resetEntriesUI() {
-        entriesCache = [];
-
-        if (entriesContainer) {
-            entriesContainer.innerHTML = '';
-        }
-
-        if (todayEntriesBody) {
-            todayEntriesBody.innerHTML = '';
-        }
-
-        if (todayPlaceholder) {
-            todayPlaceholder.style.display = 'flex';
-        }
-
-        if (todayTableWrapper) {
-            todayTableWrapper.style.display = 'none';
-        }
-
-        if (todayTotal) {
-            todayTotal.textContent = '0h 0m';
-        }
-    }
-
-    // Timer Management
-    async function startTimer() {
-        if (isStarting) {
-            showNotification('Processing start request, please wait...', 'error');
-            return;
-        }
-
-        if (!selectedEmployeeId) {
-            showNotification('Please select an employee first', 'error');
-            return;
-        }
-
-        const projectData = await getSelectedProject();
-        if (!projectData || !projectData.projectId) {
-            showNotification('Please select a project from the list', 'error');
-            return;
-        }
-
-        try {
-            isStarting = true;
-            showLoading(true);
-
-            const url = `/api/time/start?projectId=${encodeURIComponent(projectData.projectId)}&employeeId=${selectedEmployeeId}`;
-            const response = await APIClient.post(url);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to start timer: ${response.status} - ${errorText}`);
-            }
-
-            const result = await response.json();
-            handleTimerStarted(projectData, result);
-
-        } catch (error) {
-            console.error('Error starting timer:', error);
-        } finally {
-            isStarting = false;
-            showLoading(false);
-        }
-    }
-
-    async function getSelectedProject() {
-        const projectSelect = document.getElementById('project-select');
-        const selectedOption = getSelectedWaOption(projectSelect);
-
-        if (selectedOption && selectedOption.dataset.projectId) {
-            return {
-                projectId: selectedOption.dataset.projectId,
-                projectName: selectedOption.textContent || projectSelect.value
-            };
-        }
-
-        showNotification('Please select a project from the list', 'error');
-        return null;
-    }
-
-    function handleTimerStarted(projectData, result) {
-        currentTimerData = {
-            projectId: projectData.projectId,
-            projectName: resolveProjectName(projectData.projectId, projectData.projectName),
-            startTime: result.startTime || new Date().toISOString(),
-            employeeName: selectedEmployeeName
-        };
-
-        displayRunningTimer(currentTimerData);
-        clearProjectInputs();
-        showNotification(`Timer started successfully for ${projectData.projectName}!`, 'success');
-        loadEntries();
-    }
-
-    function clearProjectInputs() {
-        const projectSelect = document.getElementById('project-select');
-        if (projectSelect) {
-            projectSelect.value = '';
-            if (typeof projectSelect.requestUpdate === 'function') {
-                projectSelect.requestUpdate();
+            static async post(url, data = null) {
+                const options = { method: 'POST' };
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                return this.makeRequest(url, options);
             }
         }
-        const projectInput = document.getElementById('project-name');
-        if (projectInput) {
-            projectInput.value = '';
-        }
-    }
 
-    async function stopTimer() {
-        if (!selectedEmployeeId) {
-            showNotification('Please select an employee first', 'error');
-            return;
-        }
+        let selectedEmployeeId = null;
+        let selectedEmployeeName = null;
+        let durationInterval = null;
+        let currentTimerData = null;
+        let entriesCache = [];
+        const SELECTED_EMPLOYEE_KEY = 'reai_selected_employee_id';
 
-        if (!currentTimerData) {
-            showNotification('No active timer found', 'error');
-            return;
-        }
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            TokenManager.updateTokenStatus();
 
-        try {
-            showLoading(true);
             const token = TokenManager.getToken();
             if (!token) {
-                showNotification('No access token available', 'error');
+                showNotification('No access token found. Please login first.', 'danger');
                 return;
             }
 
-            const projectId = currentTimerData.projectId;
-            if (!projectId) {
-                showNotification('Unable to determine current project. Please restart the timer.', 'error');
-                return;
-            }
+            loadEmployees();
 
-            const url = `/api/time/stop?employeeId=${selectedEmployeeId}&projectId=${encodeURIComponent(projectId)}`;
-            const response = await APIClient.post(url);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    showNotification('No active timer found', 'error');
-                    return;
-                }
-                const errorText = await response.text();
-                throw new Error(`Failed to stop timer: ${response.status} - ${errorText}`);
-            }
-
-            const entry = await response.json();
-            handleTimerStopped(entry);
-
-        } catch (error) {
-            console.error('Error stopping timer:', error);
-            showNotification(`Failed to stop timer: ${error.message}`, 'error');
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    function handleTimerStopped(entry) {
-        stopTimerDisplay();
-        const duration = formatDuration(entry.startTime, entry.endTime);
-        showNotification(`Timer stopped! Project: ${entry.projectName}, Duration: ${duration}`, 'success');
-        loadEntries();
-    }
-
-    // Timer Display
-    function updateTimerVisualState(isRunning) {
-        const timerSection = document.getElementById('timer-section');
-        const statusBadge = document.getElementById('timer-status-badge');
-
-        if (timerSection) {
-            timerSection.classList.toggle('is-running', Boolean(isRunning));
-        }
-
-        if (statusBadge) {
-            statusBadge.textContent = isRunning ? 'Running' : 'Idle';
-            statusBadge.classList.toggle('status-running', Boolean(isRunning));
-            statusBadge.classList.toggle('status-idle', !isRunning);
-        }
-    }
-
-    function displayRunningTimer(timerData) {
-        const currentTimerDiv = document.getElementById('current-timer');
-        const startTime = new Date(timerData.startTime);
-
-        currentTimerDiv.innerHTML = `
-            <div class="timer-running">
-                <div class="timer-digits" id="live-duration">00:00:00</div>
-                <div class="timer-details">
-                    <div class="timer-project">${timerData.projectName}</div>
-                    <div class="timer-meta">
-                        <span>Started ${formatDateTime(timerData.startTime)}</span>
-                        <span>Employee: ${timerData.employeeName}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        currentTimerData = timerData;
-        updateTimerVisualState(true);
-        startLiveDurationUpdate(startTime);
-    }
-
-    function stopTimerDisplay() {
-        const currentTimerDiv = document.getElementById('current-timer');
-
-        currentTimerDiv.innerHTML = `
-            <div class="timer-empty">
-                <span class="icon">⏱</span>
-                <p>No active timer yet</p>
-                <small>Select a project and press start</small>
-            </div>
-        `;
-
-        updateTimerVisualState(false);
-        stopLiveDurationUpdate();
-        currentTimerData = null;
-    }
-
-    function startLiveDurationUpdate(startTime) {
-        stopLiveDurationUpdate();
-
-        durationInterval = setInterval(() => {
-            const element = document.getElementById('live-duration');
-            if (element) {
-                const now = new Date();
-                const diff = Math.floor((now - startTime) / 1000);
-
-                const hours = Math.floor(diff / 3600);
-                const minutes = Math.floor((diff % 3600) / 60);
-                const seconds = diff % 60;
-
-                element.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            } else {
-                stopLiveDurationUpdate();
-            }
-        }, 1000);
-    }
-
-    function stopLiveDurationUpdate() {
-        if (durationInterval) {
-            clearInterval(durationInterval);
-            durationInterval = null;
-        }
-    }
-
-    function renderEntries(entries) {
-        if (!entriesContainer) {
-            return;
-        }
-
-        if (!Array.isArray(entries) || entries.length === 0) {
-            entriesContainer.innerHTML = `
-                <div class="entries-placeholder">
-                    <span>📝</span>
-                    <p>No time entries found</p>
-                </div>
-            `;
-            return;
-        }
-
-        const entriesHtml = entries.map(entry => {
-            const projectName = resolveProjectName(entry.projectId, entry.projectName || entry.project?.name);
-            const isActive = !entry.endTime;
-            const duration = isActive ? formatCurrentDuration(entry.startTime) : formatDuration(entry.startTime, entry.endTime);
-            const startDisplay = formatDateTime(entry.startTime);
-            const endDisplay = entry.endTime ? formatDateTime(entry.endTime) : 'In progress';
-            const descriptionBlock = entry.description ? `<div class="entry-note"><strong>Notes:</strong> ${entry.description}</div>` : '';
-
-            return `
-                <wa-card class="entry ${isActive ? 'active' : ''}">
-                    <div class="entry-header">
-                        <div class="project-name">${projectName}</div>
-                        <wa-badge class="entry-status ${isActive ? 'status-running' : 'status-completed'}" pill>
-                            ${isActive ? 'Running' : 'Completed'}
-                        </wa-badge>
-                    </div>
-                    <div class="entry-meta">
-                        <div><strong>Duration:</strong> <span class="duration">${duration}</span></div>
-                        <div><strong>Started:</strong> ${startDisplay}</div>
-                        ${entry.endTime ? `<div><strong>Ended:</strong> ${endDisplay}</div>` : ''}
-                        <div><strong>Billable:</strong> ${entry.billable ? 'Yes' : 'No'}</div>
-                        <div><strong>Synced:</strong> ${entry.synced ? 'Yes' : 'No'}</div>
-                        ${descriptionBlock}
-                    </div>
-                </wa-card>
-            `;
-        }).join('');
-
-        entriesContainer.innerHTML = entriesHtml;
-    }
-
-    function renderTodayEntries(entries) {
-        if (!todaySection) {
-            return;
-        }
-
-        const now = new Date();
-        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const endOfDay = new Date(startOfDay);
-        endOfDay.setDate(endOfDay.getDate() + 1);
-
-        const todaysEntries = (entries || []).filter(entry => {
-            if (!entry.startTime) {
-                return false;
-            }
-            const startTime = new Date(entry.startTime);
-            return startTime >= startOfDay && startTime < endOfDay;
+            setInterval(() => {
+                TokenManager.updateTokenStatus();
+            }, 30000);
         });
 
-        if (!todaysEntries.length) {
-            if (todayPlaceholder) {
-                todayPlaceholder.style.display = 'flex';
+        // Load employees
+        async function loadEmployees() {
+            try {
+                showLoading(true);
+                const response = await APIClient.get('/api/employees');
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load employees: ${response.status}`);
+                }
+
+                const employees = await response.json();
+                populateEmployeeSelect(employees);
+                restoreSelectedEmployee();
+
+            } catch (error) {
+                console.error('Error loading employees:', error);
+                showNotification(`Failed to load employees: ${error.message}`, 'danger');
+            } finally {
+                showLoading(false);
             }
-            if (todayTableWrapper) {
-                todayTableWrapper.style.display = 'none';
+        }
+
+        function populateEmployeeSelect(employees) {
+            const employeeSelect = document.getElementById('employee-select');
+            employeeSelect.innerHTML = '<option value="">-- Select --</option>';
+
+            if (Array.isArray(employees) && employees.length > 0) {
+                employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.name} (${emp.email || 'No email'})`;
+                    option.dataset.name = emp.name;
+                    option.dataset.email = emp.email || '';
+                    option.dataset.department = emp.department || '';
+                    employeeSelect.appendChild(option);
+                });
+                showNotification(`Loaded ${employees.length} employees`, 'success');
+            } else {
+                showNotification('No employees found', 'warning');
             }
-            if (todayEntriesBody) {
-                todayEntriesBody.innerHTML = '';
+        }
+
+        function restoreSelectedEmployee() {
+            try {
+                const storedId = localStorage.getItem(SELECTED_EMPLOYEE_KEY);
+                if (storedId) {
+                    const employeeSelect = document.getElementById('employee-select');
+                    employeeSelect.value = storedId;
+                    handleEmployeeChange(employeeSelect);
+                }
+            } catch (error) {
+                console.warn('Unable to restore selected employee:', error);
             }
-            if (todayTotal) {
-                todayTotal.textContent = '0h 0m';
-            }
-            return;
         }
 
-        if (todayPlaceholder) {
-            todayPlaceholder.style.display = 'none';
-        }
-        if (todayTableWrapper) {
-            todayTableWrapper.style.display = 'block';
-        }
+        function handleEmployeeChange(selectElement) {
+            selectedEmployeeId = selectElement.value;
 
-        const rows = todaysEntries.map(entry => {
-            const projectName = resolveProjectName(entry.projectId, entry.projectName || entry.project?.name);
-            const isActive = !entry.endTime;
-            const duration = isActive ? formatCurrentDuration(entry.startTime) : formatDuration(entry.startTime, entry.endTime);
-            const start = formatTime(entry.startTime);
-            const end = entry.endTime ? formatTime(entry.endTime) : '—';
-            const statusClass = isActive ? 'status-running' : 'status-completed';
-            const statusLabel = isActive ? 'Running' : 'Completed';
-
-            return `
-                <tr>
-                    <td>${projectName}</td>
-                    <td>${start}</td>
-                    <td>${end}</td>
-                    <td>${duration}</td>
-                    <td><wa-badge class="entry-status ${statusClass}" pill>${statusLabel}</wa-badge></td>
-                </tr>
-            `;
-        }).join('');
-
-        if (todayEntriesBody) {
-            todayEntriesBody.innerHTML = rows;
-        }
-
-        if (todayTotal) {
-            const totalMinutes = todaysEntries.reduce((sum, entry) => sum + getDurationMinutes(entry.startTime, entry.endTime), 0);
-            todayTotal.textContent = formatMinutes(totalMinutes);
-        }
-    }
-
-    async function syncToReai() {
-        if (!selectedEmployeeId) {
-            showNotification('Please select an employee first', 'error');
-            return;
-        }
-
-        // const projectId = currentTimerData?.projectId;
-        // if (!projectId) {
-        //     showNotification('No project selected to sync', 'error');
-        //     return;
-        // }
-
-        try {
-            showLoading(true);
-
-            const url = `/api/time/sync?employeeId=${selectedEmployeeId}`;
-            const response = await APIClient.post(url);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to sync entries: ${response.status} - ${errorText}`);
+            if (!selectedEmployeeId) {
+                document.getElementById('selected-employee').style.display = 'none';
+                document.getElementById('timer-section').style.display = 'none';
+                document.getElementById('today-section').style.display = 'none';
+                document.getElementById('entries-section').style.display = 'none';
+                return;
             }
 
-            const result = await response.text();
-            showNotification(result, 'success');
-            loadEntries();
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
 
-        } catch (error) {
-            console.error('Error syncing entries:', error);
-            showNotification(`Failed to sync entries to ReAI: ${error.message}`, 'error');
-        } finally {
-            showLoading(false);
-        }
-    }
+            if (selectedOption) {
+                selectedEmployeeName = selectedOption.dataset.name;
+                localStorage.setItem(SELECTED_EMPLOYEE_KEY, selectedEmployeeId);
 
-    // Authentication
-    function logout() {
-        TokenManager.clearToken();
-        stopTimerDisplay();
+                document.getElementById('employee-name').textContent = selectedEmployeeName;
+                const metaDetails = [
+                    `ID: ${selectedEmployeeId}`,
+                    selectedOption.dataset.email,
+                    selectedOption.dataset.department
+                ].filter(Boolean).join(' · ');
+                document.getElementById('employee-meta').textContent = metaDetails;
 
-        selectedEmployeeId = null;
-        selectedEmployeeName = null;
-        currentTimerData = null;
+                document.getElementById('selected-employee').style.display = 'block';
+                document.getElementById('timer-section').style.display = 'block';
+                document.getElementById('today-section').style.display = 'block';
+                document.getElementById('entries-section').style.display = 'block';
+                document.getElementById('sync-btn').disabled = false;
 
-        document.getElementById('timer-section').style.display = 'none';
-        const entriesSectionEl = document.getElementById('entries-section');
-        if (entriesSectionEl) {
-            entriesSectionEl.style.display = 'none';
-        }
-        const selectedEmployeeDiv = document.getElementById('selected-employee');
-        selectedEmployeeDiv.style.display = 'none';
-        selectedEmployeeDiv.innerHTML = '';
-
-        resetWaSelect(document.getElementById('employee-select'), '-- Select Employee --');
-        resetWaSelect(document.getElementById('project-select'), '-- Select Project --');
-        const projectInput = document.getElementById('project-name');
-        if (projectInput) {
-            projectInput.value = '';
+                loadProjects();
+                loadCurrentTimer();
+                loadEntries();
+            }
         }
 
-        try {
-            localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
-        } catch (error) {
-            console.warn('Unable to clear stored employee on logout:', error);
+        async function loadProjects() {
+            try {
+                const response = await APIClient.get('/api/employees/project');
+
+                if (!response.ok) {
+                    console.warn('Failed to load projects');
+                    return;
+                }
+
+                const projects = await response.json();
+                const projectSelect = document.getElementById('project-select');
+                projectSelect.innerHTML = '<option value="">-- Select --</option>';
+
+                if (Array.isArray(projects) && projects.length > 0) {
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.id;
+                        option.textContent = project.name;
+                        option.dataset.projectId = project.id;
+                        option.dataset.projectName = project.name;
+                        projectSelect.appendChild(option);
+                    });
+                }
+
+            } catch (error) {
+                console.warn('Error loading projects:', error);
+            }
         }
 
-        resetEntriesUI();
-        showNotification('Logged out successfully', 'success');
-    }
+        async function loadCurrentTimer() {
+            if (!selectedEmployeeId) return;
 
-    function formatDuration(startTime, endTime) {
-        const start = new Date(startTime);
-        const end = new Date(endTime);
-        const diff = Math.max(Math.floor((end - start) / 1000 / 60), 0);
+            try {
+                const response = await APIClient.get(`/api/time/current?employeeId=${selectedEmployeeId}`);
 
-        const hours = Math.floor(diff / 60);
-        const minutes = diff % 60;
+                if (response.status === 404) {
+                    stopTimerDisplay();
+                    return;
+                }
 
-        return `${hours}h ${minutes}m`;
-    }
+                if (!response.ok) {
+                    throw new Error(`Failed to load current timer: ${response.status}`);
+                }
 
-    function formatCurrentDuration(startTime) {
-        if (!startTime) {
-            return '00:00:00';
+                const timer = await response.json();
+
+                if (timer && timer.startTime) {
+                    currentTimerData = {
+                        projectId: timer.projectId || timer.project?.id || null,
+                        projectName: timer.projectName || timer.project?.name || 'Unnamed project',
+                        startTime: timer.startTime,
+                        employeeName: selectedEmployeeName || timer.employeeName || ''
+                    };
+
+                    displayRunningTimer(currentTimerData);
+                } else {
+                    stopTimerDisplay();
+                }
+
+            } catch (error) {
+                console.warn('Unable to load current timer:', error);
+                stopTimerDisplay();
+            }
         }
 
-        const start = new Date(startTime);
-        const now = new Date();
-        const diff = Math.max(now - start, 0);
+        async function loadEntries() {
+            if (!selectedEmployeeId) return;
 
-        const hours = Math.floor(diff / 3600000);
-        const minutes = Math.floor((diff % 3600000) / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
+            try {
+                const response = await APIClient.get(`/api/time/entries?employeeId=${selectedEmployeeId}`);
 
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
+                if (!response.ok) {
+                    throw new Error(`Failed to load entries: ${response.status}`);
+                }
 
-    function formatDateTime(dateTimeString) {
-        try {
-            return new Date(dateTimeString).toLocaleString();
-        } catch (error) {
-            return 'Invalid date';
+                const entries = await response.json();
+                entriesCache = Array.isArray(entries) ? entries : [];
+
+                renderEntries(entriesCache);
+                renderTodayEntries(entriesCache);
+
+            } catch (error) {
+                console.error('Error loading time entries:', error);
+                renderEntries([]);
+                renderTodayEntries([]);
+            }
         }
-    }
 
-    function formatTime(dateTimeString) {
-        try {
-            return new Date(dateTimeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        } catch (error) {
-            return '—';
-        }
-    }
-
-    function resolveProjectName(projectId, fallback) {
-        if (projectId) {
-            const key = String(projectId);
-            if (projectMap.has(key)) {
-                return projectMap.get(key);
+        async function startTimer() {
+            if (!selectedEmployeeId) {
+                showNotification('Please select an employee first', 'warning');
+                return;
             }
 
             const projectSelect = document.getElementById('project-select');
-            if (projectSelect) {
-                const match = getWaOptions(projectSelect).find(option => option.dataset.projectId === key);
-                if (match && match.textContent) {
-                    const resolved = match.textContent.trim();
-                    if (resolved.length > 0) {
-                        projectMap.set(key, resolved);
-                        return resolved;
-                    }
+            const projectId = projectSelect.value;
+
+            if (!projectId) {
+                showNotification('Please select a project', 'warning');
+                return;
+            }
+
+            const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+            const projectName = selectedOption?.dataset.projectName || selectedOption?.textContent;
+
+            try {
+                showLoading(true);
+
+                const url = `/api/time/start?projectId=${encodeURIComponent(projectId)}&employeeId=${selectedEmployeeId}`;
+                const response = await APIClient.post(url);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to start timer: ${response.status} - ${errorText}`);
                 }
+
+                const result = await response.json();
+
+                currentTimerData = {
+                    projectId: projectId,
+                    projectName: projectName,
+                    startTime: result.startTime || new Date().toISOString(),
+                    employeeName: selectedEmployeeName
+                };
+
+                displayRunningTimer(currentTimerData);
+                projectSelect.value = '';
+                showNotification(`Timer started for ${projectName}!`, 'success');
+                loadEntries();
+
+            } catch (error) {
+                console.error('Error starting timer:', error);
+                showNotification(`Failed to start timer: ${error.message}`, 'danger');
+            } finally {
+                showLoading(false);
             }
         }
 
-        if (fallback && fallback.trim().length > 0) {
-            return fallback;
+        async function stopTimer() {
+            if (!selectedEmployeeId) {
+                showNotification('Please select an employee first', 'warning');
+                return;
+            }
+
+            if (!currentTimerData) {
+                showNotification('No active timer found', 'warning');
+                return;
+            }
+
+            try {
+                showLoading(true);
+
+                const projectId = currentTimerData.projectId;
+                if (!projectId) {
+                    showNotification('Unable to determine current project', 'danger');
+                    return;
+                }
+
+                const url = `/api/time/stop?employeeId=${selectedEmployeeId}&projectId=${encodeURIComponent(projectId)}`;
+                const response = await APIClient.post(url);
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showNotification('No active timer found', 'warning');
+                        return;
+                    }
+                    const errorText = await response.text();
+                    throw new Error(`Failed to stop timer: ${response.status} - ${errorText}`);
+                }
+
+                const entry = await response.json();
+                stopTimerDisplay();
+                const duration = formatDuration(entry.startTime, entry.endTime);
+                showNotification(`Timer stopped! Duration: ${duration}`, 'success');
+                loadEntries();
+
+            } catch (error) {
+                console.error('Error stopping timer:', error);
+                showNotification(`Failed to stop timer: ${error.message}`, 'danger');
+            } finally {
+                showLoading(false);
+            }
         }
-        return 'Unnamed project';
-    }
 
-    function getDurationMinutes(startTime, endTime) {
-        const start = new Date(startTime);
-        const end = endTime ? new Date(endTime) : new Date();
-        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-            return 0;
+        function displayRunningTimer(timerData) {
+            const currentTimerDiv = document.getElementById('current-timer');
+            const startTime = new Date(timerData.startTime);
+
+            currentTimerDiv.className = 'timer active';
+            currentTimerDiv.innerHTML = `
+                <div class="timer-time" id="live-duration">00:00:00</div>
+                <div class="timer-project">${timerData.projectName}</div>
+                <div class="timer-meta">Started ${formatDateTime(timerData.startTime)} · ${timerData.employeeName}</div>
+            `;
+
+            currentTimerData = timerData;
+            startLiveDurationUpdate(startTime);
         }
 
-        const diff = Math.max(end - start, 0);
-        return Math.round(diff / 60000);
-    }
+        function stopTimerDisplay() {
+            const currentTimerDiv = document.getElementById('current-timer');
 
-    function formatMinutes(totalMinutes) {
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        return `${hours}h ${minutes}m`;
-    }
+            currentTimerDiv.className = 'timer';
+            currentTimerDiv.innerHTML = `
+                <div class="empty-icon">
+                    <wa-icon name="hourglass-half"></wa-icon>
+                </div>
+                <strong>No active timer</strong>
+                <p style="font-size: 0.875rem; color: #64748b; margin-top: 0.5rem;">Select project to start</p>
+            `;
 
-    function showLoading(show) {
-        const loadingDiv = document.getElementById('loading');
-        if (loadingDiv) {
-            loadingDiv.style.display = show ? 'flex' : 'none';
+            stopLiveDurationUpdate();
+            currentTimerData = null;
         }
-    }
 
-    function showNotification(message, type = 'success') {
-        const existingNotifications = document.querySelectorAll('.notification');
-        existingNotifications.forEach(notification => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
+        function startLiveDurationUpdate(startTime) {
+            stopLiveDurationUpdate();
+
+            durationInterval = setInterval(() => {
+                const element = document.getElementById('live-duration');
+                if (element) {
+                    const now = new Date();
+                    const diff = Math.floor((now - startTime) / 1000);
+
+                    const hours = Math.floor(diff / 3600);
+                    const minutes = Math.floor((diff % 3600) / 60);
+                    const seconds = diff % 60;
+
+                    element.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    stopLiveDurationUpdate();
+                }
+            }, 1000);
+        }
+
+        function stopLiveDurationUpdate() {
+            if (durationInterval) {
+                clearInterval(durationInterval);
+                durationInterval = null;
+            }
+        }
+
+        function renderEntries(entries) {
+            const container = document.getElementById('entries-container');
+            if (!container) return;
+
+            if (!Array.isArray(entries) || entries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <wa-icon name="inbox"></wa-icon>
+                        <h3>No Time Entries</h3>
+                        <p>Start tracking to see entries</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const entriesHtml = entries.map(entry => {
+                const projectName = entry.projectName || entry.project?.name || 'Unnamed project';
+                const isActive = !entry.endTime;
+                const duration = isActive ? formatCurrentDuration(entry.startTime) : formatDuration(entry.startTime, entry.endTime);
+                const startDisplay = formatDateTime(entry.startTime);
+                const endDisplay = entry.endTime ? formatDateTime(entry.endTime) : 'In progress';
+
+                return `
+                    <div class="entry ${isActive ? 'active' : ''}">
+                        <div class="entry-head">
+                            <div class="entry-title">${projectName}</div>
+                            <wa-badge variant="${isActive ? 'danger' : 'success'}" pill>
+                                ${isActive ? 'Running' : 'Done'}
+                            </wa-badge>
+                        </div>
+                        <div class="entry-grid">
+                            <div class="entry-item">
+                                <wa-icon name="clock"></wa-icon>
+                                <span><span class="entry-label">Duration:</span> ${duration}</span>
+                            </div>
+                            <div class="entry-item">
+                                <wa-icon name="play"></wa-icon>
+                                <span><span class="entry-label">Started:</span> ${startDisplay}</span>
+                            </div>
+                            ${entry.endTime ? `
+                            <div class="entry-item">
+                                <wa-icon name="stop"></wa-icon>
+                                <span><span class="entry-label">Ended:</span> ${endDisplay}</span>
+                            </div>
+                            ` : ''}
+                            <div class="entry-item">
+                                <wa-icon name="${entry.billable ? 'dollar-sign' : 'minus-circle'}"></wa-icon>
+                                <span><span class="entry-label">Billable:</span> ${entry.billable ? 'Yes' : 'No'}</span>
+                            </div>
+                            <div class="entry-item">
+                                <wa-icon name="${entry.synced ? 'check-circle' : 'exclamation-circle'}"></wa-icon>
+                                <span><span class="entry-label">Synced:</span> ${entry.synced ? 'Yes' : 'No'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = entriesHtml;
+        }
+
+        function renderTodayEntries(entries) {
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const endOfDay = new Date(startOfDay);
+            endOfDay.setDate(endOfDay.getDate() + 1);
+
+            const todaysEntries = (entries || []).filter(entry => {
+                if (!entry.startTime) return false;
+                const startTime = new Date(entry.startTime);
+                return startTime >= startOfDay && startTime < endOfDay;
+            });
+
+            const todayTableWrapper = document.getElementById('today-table-wrapper');
+            const todayPlaceholder = document.getElementById('today-placeholder');
+            const todayEntriesBody = document.getElementById('today-entries-body');
+            const todayTotal = document.getElementById('today-total');
+            const todayCount = document.getElementById('today-count');
+
+            if (!todaysEntries.length) {
+                todayPlaceholder.style.display = 'block';
+                todayTableWrapper.style.display = 'none';
+                todayEntriesBody.innerHTML = '';
+                todayTotal.textContent = '0h 0m';
+                todayCount.textContent = '0';
+                return;
+            }
+
+            todayPlaceholder.style.display = 'none';
+            todayTableWrapper.style.display = 'block';
+
+            const rows = todaysEntries.map(entry => {
+                const projectName = entry.projectName || entry.project?.name || 'Unnamed project';
+                const isActive = !entry.endTime;
+                const duration = isActive ? formatCurrentDuration(entry.startTime) : formatDuration(entry.startTime, entry.endTime);
+                const start = formatTime(entry.startTime);
+                const end = entry.endTime ? formatTime(entry.endTime) : '—';
+
+                return `
+                    <tr>
+                        <td><strong>${projectName}</strong></td>
+                        <td>${start}</td>
+                        <td>${end}</td>
+                        <td><strong>${duration}</strong></td>
+                        <td><wa-badge variant="${isActive ? 'danger' : 'success'}" pill>${isActive ? 'Running' : 'Done'}</wa-badge></td>
+                    </tr>
+                `;
+            }).join('');
+
+            todayEntriesBody.innerHTML = rows;
+
+            const totalMinutes = todaysEntries.reduce((sum, entry) => sum + getDurationMinutes(entry.startTime, entry.endTime), 0);
+            todayTotal.textContent = formatMinutes(totalMinutes);
+            todayCount.textContent = todaysEntries.length.toString();
+        }
+
+        // Sync
+        document.getElementById('sync-btn').addEventListener('click', async function() {
+            if (!selectedEmployeeId) {
+                showNotification('Please select an employee first', 'warning');
+                return;
+            }
+
+            try {
+                showLoading(true);
+
+                const url = `/api/time/sync?employeeId=${selectedEmployeeId}`;
+                const response = await APIClient.post(url);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to sync: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.text();
+                showNotification(result, 'success');
+                loadEntries();
+
+            } catch (error) {
+                console.error('Error syncing:', error);
+                showNotification(`Failed to sync: ${error.message}`, 'danger');
+            } finally {
+                showLoading(false);
             }
         });
 
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
+        function logout() {
+            TokenManager.clearToken();
+            stopTimerDisplay();
 
-        document.body.appendChild(notification);
+            selectedEmployeeId = null;
+            selectedEmployeeName = null;
+            currentTimerData = null;
 
-        setTimeout(() => notification.classList.add('show'), 100);
+            document.getElementById('timer-section').style.display = 'none';
+            document.getElementById('today-section').style.display = 'none';
+            document.getElementById('entries-section').style.display = 'none';
+            document.getElementById('selected-employee').style.display = 'none';
 
-        setTimeout(() => {
-            notification.classList.remove('show');
+            document.getElementById('employee-select').innerHTML = '<option value="">-- Select --</option>';
+            document.getElementById('project-select').innerHTML = '<option value="">-- Select --</option>';
+
+            localStorage.removeItem(SELECTED_EMPLOYEE_KEY);
+            showNotification('Logged out successfully', 'success');
+        }
+
+        // Utils
+        function formatDuration(startTime, endTime) {
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            const diff = Math.max(Math.floor((end - start) / 1000 / 60), 0);
+
+            const hours = Math.floor(diff / 60);
+            const minutes = diff % 60;
+
+            return `${hours}h ${minutes}m`;
+        }
+
+        function formatCurrentDuration(startTime) {
+            if (!startTime) return '00:00:00';
+
+            const start = new Date(startTime);
+            const now = new Date();
+            const diff = Math.max(now - start, 0);
+
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function formatDateTime(dateTimeString) {
+            try {
+                return new Date(dateTimeString).toLocaleString();
+            } catch (error) {
+                return 'Invalid date';
+            }
+        }
+
+        function formatTime(dateTimeString) {
+            try {
+                return new Date(dateTimeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch (error) {
+                return '—';
+            }
+        }
+
+        function getDurationMinutes(startTime, endTime) {
+            const start = new Date(startTime);
+            const end = endTime ? new Date(endTime) : new Date();
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+                return 0;
+            }
+
+            const diff = Math.max(end - start, 0);
+            return Math.round(diff / 60000);
+        }
+
+        function formatMinutes(totalMinutes) {
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return `${hours}h ${minutes}m`;
+        }
+
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loading');
+            if (loadingDiv) {
+                loadingDiv.className = show ? 'loading show' : 'loading';
+            }
+        }
+
+        function showNotification(message, variant = 'success') {
+            const notification = document.getElementById('notification');
+            notification.variant = variant;
+            notification.textContent = message;
+            notification.open = true;
+            notification.style.display = 'block';
+
             setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 4000);
-    }
-
-    // Debug Functions
-    window.debugToken = function() {
-        const token = TokenManager.getToken();
-        if (token) {
-            const payload = TokenManager.getTokenPayload(token);
-            console.log('Token payload:', payload);
-            console.log('Token expired:', TokenManager.isTokenExpired(token));
-            return { token: token.substring(0, 50) + '...', payload };
-        } else {
-            console.log('No token found');
-            return null;
+                notification.open = false;
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 4000);
         }
-    };
 
-    window.debugAPI = async function(endpoint) {
-        try {
-            const response = await APIClient.get(endpoint);
-            const data = await response.json();
-            console.log('API Response:', data);
-            return data;
-        } catch (error) {
-            console.error('API Error:', error);
-            return null;
-        }
-    };
+        // Cleanup
+        window.addEventListener('beforeunload', function() {
+            stopLiveDurationUpdate();
+        });
 
-    // Cleanup
-    window.addEventListener('beforeunload', function() {
-        stopLiveDurationUpdate();
-    });
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+            showNotification('An unexpected error occurred', 'danger');
+        });
 
-    // Error handling
-    window.addEventListener('error', function(event) {
-        console.error('Global error:', event.error);
-        showNotification('An unexpected error occurred', 'error');
-    });
-
-    window.addEventListener('unhandledrejection', function(event) {
-        console.error('Unhandled promise rejection:', event.reason);
-        showNotification('An unexpected error occurred', 'error');
-    });
-</script>
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            showNotification('An unexpected error occurred', 'danger');
+        });
+    </script>
 </body>
 </html>

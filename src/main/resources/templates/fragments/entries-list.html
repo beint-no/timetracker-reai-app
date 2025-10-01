@@ -62,7 +62,50 @@
         <p th:text="#{empty.start.tracking.all}"></p>
     </div>
 
-    <div th:if="${totalCount > entries.size()}" class="wa-text-s" style="text-align: center; color: var(--wa-color-neutral-40);"
-         th:text="${#messages.msg('action.showing.of', entries.size(), totalCount)}"></div>
+    <div th:if="${totalCount > 0}" class="wa-stack wa-gap-m">
+        <wa-divider></wa-divider>
+        <div class="wa-split wa-align-items-center">
+            <span class="wa-text-s" style="color: var(--wa-color-neutral-40);"
+                  th:text="'Showing ' + ${offset + 1} + ' to ' + ${offset + entries.size()} + ' of ' + ${totalCount} + ' results'"></span>
+            <wa-button-group orientation="horizontal">
+                <wa-button appearance="outlined"
+                          th:disabled="${currentPage == 1}"
+                          hx-get="/htmx/entries/all"
+                          hx-target="#entries-content-all"
+                          hx-swap="innerHTML"
+                          th:attr="hx-vals=|{'employeeId': ${employeeId}, 'projectId': ${projectId}, 'limit': ${pageSize}, 'offset': ${(currentPage - 2) * pageSize}}|">
+                    <wa-icon name="chevron-left"></wa-icon>
+                </wa-button>
+                <span th:each="page : ${#numbers.sequence(1, totalPages > 5 ? 5 : totalPages)}">
+                    <wa-button th:if="${page == currentPage}"
+                              appearance="accent" variant="brand"
+                              th:text="${page}"></wa-button>
+                    <wa-button th:unless="${page == currentPage}"
+                              appearance="outlined"
+                              hx-get="/htmx/entries/all"
+                              hx-target="#entries-content-all"
+                              hx-swap="innerHTML"
+                              th:text="${page}"
+                              th:attr="hx-vals=|{'employeeId': ${employeeId}, 'projectId': ${projectId}, 'limit': ${pageSize}, 'offset': ${(page - 1) * pageSize}}|"></wa-button>
+                </span>
+                <wa-button appearance="outlined" disabled th:if="${totalPages > 5}">...</wa-button>
+                <wa-button appearance="outlined"
+                          th:if="${totalPages > 5}"
+                          hx-get="/htmx/entries/all"
+                          hx-target="#entries-content-all"
+                          hx-swap="innerHTML"
+                          th:text="${totalPages}"
+                          th:attr="hx-vals=|{'employeeId': ${employeeId}, 'projectId': ${projectId}, 'limit': ${pageSize}, 'offset': ${(totalPages - 1) * pageSize}}|"></wa-button>
+                <wa-button appearance="outlined"
+                          th:disabled="${currentPage == totalPages}"
+                          hx-get="/htmx/entries/all"
+                          hx-target="#entries-content-all"
+                          hx-swap="innerHTML"
+                          th:attr="hx-vals=|{'employeeId': ${employeeId}, 'projectId': ${projectId}, 'limit': ${pageSize}, 'offset': ${currentPage * pageSize}}|">
+                    <wa-icon name="chevron-right"></wa-icon>
+                </wa-button>
+            </wa-button-group>
+        </div>
+    </div>
 </wa-card>
 </div>

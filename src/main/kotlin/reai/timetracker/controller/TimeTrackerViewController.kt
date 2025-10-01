@@ -130,6 +130,8 @@ class TimeTrackerViewController(
     fun getTodayEntries(
         @RequestParam(required = false) employeeId: Long?,
         @RequestParam(required = false) projectId: Long?,
+        @RequestParam(required = false, defaultValue = "10") limit: Int,
+        @RequestParam(required = false, defaultValue = "0") offset: Int,
         @RequestHeader(value = "Authorization", required = false) authHeader: String?,
         model: Model
     ): String {
@@ -139,12 +141,18 @@ class TimeTrackerViewController(
             model.addAttribute("totalHours", 0)
             model.addAttribute("totalMinutes", 0)
             model.addAttribute("entryCount", 0)
+            model.addAttribute("currentPage", 1)
+            model.addAttribute("totalPages", 1)
+            model.addAttribute("pageSize", limit)
             return "fragments/today-entries"
         }
 
         val today = LocalDate.now()
         val allEntries = timeTrackerService.getTimeEntries(employeeId, projectId)
         val todayEntries = allEntries.filter { it.entryDate == today }
+
+        val totalCount = todayEntries.size
+        val pagedEntries = todayEntries.drop(offset).take(limit)
 
         val totalMinutes = todayEntries
             .filter { it.endTime != null }
@@ -155,11 +163,20 @@ class TimeTrackerViewController(
         val projects = reaiApiService.getProjects(null, authHeader)
         val projectMap = projects.associateBy { it.id }
 
-        model.addAttribute("entries", todayEntries)
+        val currentPage = (offset / limit) + 1
+        val totalPages = (totalCount + limit - 1) / limit
+
+        model.addAttribute("entries", pagedEntries)
         model.addAttribute("projects", projectMap)
         model.addAttribute("totalHours", totalMinutes / 60)
         model.addAttribute("totalMinutes", totalMinutes % 60)
-        model.addAttribute("entryCount", todayEntries.size)
+        model.addAttribute("entryCount", totalCount)
+        model.addAttribute("currentPage", currentPage)
+        model.addAttribute("totalPages", totalPages)
+        model.addAttribute("pageSize", limit)
+        model.addAttribute("offset", offset)
+        model.addAttribute("employeeId", employeeId)
+        model.addAttribute("projectId", projectId)
 
         return "fragments/today-entries"
     }
@@ -168,7 +185,8 @@ class TimeTrackerViewController(
     fun getAllEntries(
         @RequestParam(required = false) employeeId: Long?,
         @RequestParam(required = false) projectId: Long?,
-        @RequestParam(required = false) limit: Int?,
+        @RequestParam(required = false, defaultValue = "10") limit: Int,
+        @RequestParam(required = false, defaultValue = "0") offset: Int,
         @RequestHeader(value = "Authorization", required = false) authHeader: String?,
         model: Model
     ): String {
@@ -176,23 +194,31 @@ class TimeTrackerViewController(
             model.addAttribute("entries", emptyList<Any>())
             model.addAttribute("projects", emptyMap<Long, Any>())
             model.addAttribute("totalCount", 0)
+            model.addAttribute("currentPage", 1)
+            model.addAttribute("totalPages", 1)
+            model.addAttribute("pageSize", limit)
             return "fragments/entries-list"
         }
 
         val allEntries = timeTrackerService.getTimeEntries(employeeId, projectId)
-
-        val limitedEntries = if (limit != null && limit > 0) {
-            allEntries.take(limit)
-        } else {
-            allEntries
-        }
+        val totalCount = allEntries.size
+        val pagedEntries = allEntries.drop(offset).take(limit)
 
         val projects = reaiApiService.getProjects(null, authHeader)
         val projectMap = projects.associateBy { it.id }
 
-        model.addAttribute("entries", limitedEntries)
+        val currentPage = (offset / limit) + 1
+        val totalPages = (totalCount + limit - 1) / limit
+
+        model.addAttribute("entries", pagedEntries)
         model.addAttribute("projects", projectMap)
-        model.addAttribute("totalCount", allEntries.size)
+        model.addAttribute("totalCount", totalCount)
+        model.addAttribute("currentPage", currentPage)
+        model.addAttribute("totalPages", totalPages)
+        model.addAttribute("pageSize", limit)
+        model.addAttribute("offset", offset)
+        model.addAttribute("employeeId", employeeId)
+        model.addAttribute("projectId", projectId)
 
         return "fragments/entries-list"
     }
@@ -241,21 +267,21 @@ class TimeTrackerViewController(
         model: Model
     ): String {
         if (employeeId == null) {
-            model.addAttribute("success", false)
+            model.addAttribute("variant", "danger")
             model.addAttribute("message", "Please select an employee first")
-            return "fragments/sync-result"
+            return "fragments/notification"
         }
 
         return try {
             val synced = timeTrackerService.syncTodayAllDataAggregated(employeeId, authHeader)
-            model.addAttribute("success", synced)
-            model.addAttribute("message", if (synced) "Synced successfully" else "Sync failed")
-            "fragments/sync-result"
+            model.addAttribute("variant", if (synced) "success" else "danger")
+            model.addAttribute("message", if (synced) "Synced successfully!" else "Sync failed")
+            "fragments/notification"
         } catch (e: Exception) {
             logger.error("Error syncing: ${e.message}")
-            model.addAttribute("success", false)
+            model.addAttribute("variant", "danger")
             model.addAttribute("message", "Error: ${e.message}")
-            "fragments/sync-result"
+            "fragments/notification"
         }
     }
 

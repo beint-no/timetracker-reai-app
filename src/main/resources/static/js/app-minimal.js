@@ -182,7 +182,7 @@ function loadEntriesForTab(tabName) {
     if (employeeId == null) return;
 
     const projectId = getSelectedProject();
-    const values = { employeeId };
+    const values = { employeeId, limit: 10, offset: 0 };
     if (projectId != null) values.projectId = projectId;
 
     let endpoint = '/htmx/entries/today';
@@ -191,7 +191,6 @@ function loadEntriesForTab(tabName) {
     if (tabName === 'all') {
         endpoint = '/htmx/entries/all';
         targetId = 'entries-content-all';
-        values.limit = 50;
     }
 
     htmx.ajax('GET', endpoint, {
@@ -204,6 +203,12 @@ function loadEntriesForTab(tabName) {
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
     checkToken();
+
+    // Load entries for current tab on page load
+    const employeeId = getSelectedEmployee();
+    if (employeeId) {
+        loadEntriesForTab(activeTab);
+    }
 
     // Tab changes
     const tabGroup = document.getElementById('entries-tab-group');

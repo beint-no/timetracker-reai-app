@@ -1,0 +1,14 @@
+<wa-callout th:variant="${variant}" size="medium"
+           style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; min-width: 300px; animation: slideIn 0.3s ease-out;"
+           th:text="${message}">
+</wa-callout>
+<script>
+    setTimeout(() => {
+        const callout = document.querySelector('wa-callout[style*="position: fixed"]');
+        if (callout) {
+            callout.style.transition = 'opacity 0.5s';
+            callout.style.opacity = '0';
+            setTimeout(() => callout.remove(), 500);
+        }
+    }, 4000);
+</script>

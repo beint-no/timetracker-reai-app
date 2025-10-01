@@ -20,17 +20,25 @@
             <p style="margin: 0; color: var(--wa-color-neutral-40);" th:text="#{timer.status.no.active}"></p>
         </div>
     </div>
-<script th:if="${#ctx.containsVariable('success') and success and hasTimer}">
-    showNotification('Timer started', 'success');
-</script>
 
-<script th:if="${#ctx.containsVariable('success') and success and !hasTimer}">
-    showNotification('Timer stopped', 'success');
-</script>
+<!-- Notification using OOB swap -->
+<div th:if="${notificationMessage}" id="notification-area" hx-swap-oob="true">
+    <wa-callout th:variant="${notificationVariant}" size="medium"
+               style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; min-width: 300px; animation: slideIn 0.3s ease-out;"
+               th:text="${notificationMessage}">
+    </wa-callout>
+    <script>
+        setTimeout(() => {
+            const area = document.getElementById('notification-area');
+            if (area) {
+                area.querySelector('wa-callout').style.transition = 'opacity 0.5s';
+                area.querySelector('wa-callout').style.opacity = '0';
+                setTimeout(() => area.innerHTML = '', 500);
+            }
+        }, 4000);
+    </script>
+</div>
 
-<script th:if="${#ctx.containsVariable('errorMessage') and errorMessage}" th:inline="text">
-    showNotification('[[${errorMessage}]]', 'danger');
-</script>
 <div th:if="${showCloseButton}" style="margin-top: var(--wa-space-m);">
     <wa-callout variant="warning">
         <div class="wa-split wa-align-items-center wa-gap-m">

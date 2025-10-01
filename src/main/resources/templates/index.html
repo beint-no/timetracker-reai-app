@@ -131,7 +131,7 @@
         }
     </style>
 </head>
-<body>
+<body th:attr="data-reai-url=${reaiLoginUrl}">
 <div id="notification-area"></div>
 <wa-dialog id="token-dialog" th:attr="label=#{token.dialog.title}">
         <div class="wa-stack wa-gap-m">
@@ -167,8 +167,7 @@
                                   hx-get="/htmx/employees"
                                   hx-trigger="load"
                                   hx-swap="innerHTML"
-                                  hx-target="this"
-                                  onchange="handleEmployeeChange(event)">
+                                  hx-target="this">
                         </wa-select>
                     </div>
                     <wa-button variant="primary" size="small" class="header-sync"
@@ -240,6 +239,38 @@
                     <div id="timer-display" style="margin-top: var(--wa-space-m);"></div>
                 </wa-card>
             </div>
+
+            <!-- Hidden HTMX triggers -->
+            <div style="display: none;">
+                <div id="load-timer-trigger"
+                     hx-get="/htmx/timer/current"
+                     hx-trigger="loadTimer"
+                     hx-target="#timer-display"
+                     hx-swap="innerHTML"
+                     hx-vals='js:{employeeId: getSelectedEmployee()}'></div>
+
+                <div id="load-entries-today-trigger"
+                     hx-get="/htmx/entries/today"
+                     hx-trigger="loadEntriesToday"
+                     hx-target="#entries-content-today"
+                     hx-swap="innerHTML"
+                     hx-vals='js:{employeeId: getSelectedEmployee(), projectId: getSelectedProject(), limit: 10, offset: 0}'></div>
+
+                <div id="load-entries-all-trigger"
+                     hx-get="/htmx/entries/all"
+                     hx-trigger="loadEntriesAll"
+                     hx-target="#entries-content-all"
+                     hx-swap="innerHTML"
+                     hx-vals='js:{employeeId: getSelectedEmployee(), projectId: getSelectedProject(), limit: 10, offset: 0}'></div>
+
+                <div id="load-stats-trigger"
+                     hx-get="/htmx/stats"
+                     hx-trigger="loadStats"
+                     hx-target="#stats-content"
+                     hx-swap="innerHTML"
+                     hx-vals='js:{employeeId: getSelectedEmployee(), projectId: getSelectedProject(), tab: activeTab}'></div>
+            </div>
+
 <wa-tab-group id="entries-tab-group">
                 <wa-tab slot="nav" panel="today" th:text="#{tab.today}"></wa-tab>
                 <wa-tab slot="nav" panel="all" th:text="#{tab.all}"></wa-tab>
@@ -313,7 +344,7 @@
         }
 
         function goToReai() {
-            window.location.href = /*[[${reaiLoginUrl}]]*/ 'http://localhost:8080/login';
+            window.location.href = document.body.dataset.reaiUrl || 'http://localhost:8080';
         }
 
         function getSelectedEmployee() {
@@ -323,33 +354,15 @@
 
         function getSelectedProject() {
             const value = document.getElementById('timer-project-select')?.value;
-            if (value === 'all' || !value) return null;
+            if (value === 'all' || !value) return undefined;
             return Number(value);
         }
 
         function getSelectedProjectName() {
             const select = document.getElementById('timer-project-select');
-            if (!select ||!select.value) return '';
+            if (!select || !select.value) return '';
             const option = select.querySelector(`wa-option[value="${select.value}"]`);
             return option ? option.textContent : '';
-        }
-
-        // Handle employee change
-        function handleEmployeeChange() {
-            const employeeId = getSelectedEmployee();
-            if (!employeeId) {
-                document.getElementById('stats-dashboard').style.display = 'none';
-                return;
-            }
-
-            htmx.ajax('GET', '/htmx/timer/current', {
-                target: '#timer-display',
-                swap: 'innerHTML',
-                values: { employeeId }
-            });
-
-            loadEntriesForTab(activeTab);
-            updateStatsDashboard();
         }
 
         function handleProjectChange() {
@@ -359,24 +372,14 @@
             }
         }
 
-        // Load entries for tab
+        // Trigger HTMX requests via custom events
         function loadEntriesForTab(tabName) {
-            const employeeId = getSelectedEmployee();
-            if (!employeeId) return;
+            if (!getSelectedEmployee()) return;
 
-            const projectId = getSelectedProject();
-            const values = { employeeId };
-            if (projectId) values.projectId = projectId;
-
-            const endpoint = tabName === 'all' ? '/htmx/entries/all' : '/htmx/entries/today';
-            const targetId = tabName === 'all' ? 'entries-content-all' : 'entries-content-today';
-
-            if (tabName === 'all') values.limit = 50;
-
-            htmx.ajax('GET', endpoint, { target: `#${targetId}`, swap: 'innerHTML', values });
+            const triggerId = tabName === 'all' ? 'load-entries-all-trigger' : 'load-entries-today-trigger';
+            htmx.trigger(`#${triggerId}`, tabName === 'all' ? 'loadEntriesAll' : 'loadEntriesToday');
         }
 
-        // Update stats dashboard
         function updateStatsDashboard() {
             const employeeId = getSelectedEmployee();
             if (!employeeId) {
@@ -384,17 +387,13 @@
                 return;
             }
 
-            const projectId = getSelectedProject();
-            const values = { employeeId, tab: activeTab };
-            if (projectId) values.projectId = projectId;
-
-            htmx.ajax('GET', '/htmx/stats', {
-                target: '#stats-content',
-                swap: 'innerHTML',
-                values
-            }).then(() => {
-                document.getElementById('stats-dashboard').style.display = 'block';
-            });
+            htmx.trigger('#load-stats-trigger', 'loadStats');
+            // Show dashboard after stats load
+            setTimeout(() => {
+                if (getSelectedEmployee()) {
+                    document.getElementById('stats-dashboard').style.display = 'block';
+                }
+            }, 100);
         }
 
         // Timer display functions
@@ -442,11 +441,7 @@
                 if (employeeId) {
                     loadEntriesForTab(activeTab);
                     updateStatsDashboard();
-                    htmx.ajax('GET', '/htmx/timer/current', {
-                        target: '#timer-display',
-                        swap: 'innerHTML',
-                        values: { employeeId }
-                    });
+                    htmx.trigger('#load-timer-trigger', 'loadTimer');
                 }
             }
 
@@ -473,11 +468,7 @@
             setTimeout(() => {
                 const employeeId = getSelectedEmployee();
                 if (employeeId) {
-                    htmx.ajax('GET', '/htmx/timer/current', {
-                        target: '#timer-display',
-                        swap: 'innerHTML',
-                        values: { employeeId }
-                    });
+                    htmx.trigger('#load-timer-trigger', 'loadTimer');
                     loadEntriesForTab('all');
                     updateStatsDashboard();
                 }

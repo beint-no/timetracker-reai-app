@@ -16,7 +16,6 @@ class HomeController {
     fun index(model: Model, session: HttpSession): String {
         model.addAttribute("reaiLoginUrl", reaiLoginUrl)
 
-        // Pass session data to template
         val selectedEmployeeId = session.getAttribute("selectedEmployeeId") as? Long
         val selectedProjectId = session.getAttribute("selectedProjectId") as? String
 

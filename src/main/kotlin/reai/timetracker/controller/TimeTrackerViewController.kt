@@ -83,13 +83,14 @@ class TimeTrackerViewController(
         // Check if there's already an active timer BEFORE calling service
         val existingTimer = timeTrackerService.getCurrentTimer(employeeId)
         if (existingTimer.isPresent) {
-            // Show existing timer with warning and close button
+            // Show existing timer with warning
             val timer = existingTimer.get()
             model.addAttribute("timer", timer)
             model.addAttribute("hasTimer", true)
             model.addAttribute("projectName", resolveProjectName(timer.projectId, authHeader))
             model.addAttribute("showCloseButton", true)
-            model.addAttribute("success", false)
+            model.addAttribute("notificationVariant", "warning")
+            model.addAttribute("notificationMessage", "Timer already running!")
             return "fragments/timer-display"
         }
 
@@ -98,12 +99,14 @@ class TimeTrackerViewController(
             model.addAttribute("timer", entry)
             model.addAttribute("projectName", projectName)
             model.addAttribute("hasTimer", true)
-            model.addAttribute("success", true)
+            model.addAttribute("notificationVariant", "success")
+            model.addAttribute("notificationMessage", "Timer started!")
             "fragments/timer-display"
         } catch (e: Exception) {
             logger.error("Error starting timer: ${e.message}")
             model.addAttribute("hasTimer", false)
-            model.addAttribute("errorMessage", e.message)
+            model.addAttribute("notificationVariant", "danger")
+            model.addAttribute("notificationMessage", "Error: ${e.message}")
             "fragments/timer-display"
         }
     }
@@ -117,11 +120,14 @@ class TimeTrackerViewController(
         return try {
             timeTrackerService.stopTimer(employeeId, authHeader)
             model.addAttribute("hasTimer", false)
-            model.addAttribute("success", true)
+            model.addAttribute("notificationVariant", "success")
+            model.addAttribute("notificationMessage", "Timer stopped!")
             "fragments/timer-display"
         } catch (e: Exception) {
             logger.error("Error stopping timer: ${e.message}")
-            model.addAttribute("error", e.message)
+            model.addAttribute("hasTimer", false)
+            model.addAttribute("notificationVariant", "danger")
+            model.addAttribute("notificationMessage", "Error: ${e.message}")
             "fragments/timer-display"
         }
     }

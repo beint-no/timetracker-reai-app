@@ -1,0 +1,23 @@
+<div class="wa-grid wa-gap-m" style="--min-column-size: 80px;">
+    <div class="wa-stack wa-gap-2xs">
+        <div class="wa-cluster wa-gap-2xs" style="font-size: var(--wa-font-size-s); color: var(--wa-color-neutral-40);">
+            <wa-icon name="clock"></wa-icon>
+            <span th:text="#{stats.total.time.today}"></span>
+        </div>
+        <div style="font-size: var(--wa-font-size-xl); font-weight: var(--wa-font-weight-bold);" th:text="${#numbers.formatDecimal(totalHours, 1, 2)} + 'h'">0.00h</div>
+    </div>
+    <div class="wa-stack wa-gap-2xs">
+        <div class="wa-cluster wa-gap-2xs" style="font-size: var(--wa-font-size-s); color: var(--wa-color-neutral-40);">
+            <wa-icon name="list-check"></wa-icon>
+            <span th:text="#{stats.total.entries}"></span>
+        </div>
+        <div style="font-size: var(--wa-font-size-xl); font-weight: var(--wa-font-weight-bold);" th:text="${totalEntries}">0</div>
+    </div>
+    <div class="wa-stack wa-gap-2xs">
+        <div class="wa-cluster wa-gap-2xs" style="font-size: var(--wa-font-size-s); color: var(--wa-color-neutral-40);">
+            <wa-icon name="sync"></wa-icon>
+            <span th:text="#{stats.synced}"></span>
+        </div>
+        <div style="font-size: var(--wa-font-size-xl); font-weight: var(--wa-font-weight-bold);" th:text="${syncedEntries}">0</div>
+    </div>
+</div>

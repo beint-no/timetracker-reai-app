@@ -1,0 +1,64 @@
+<div class="entries-scroll">
+<wa-card class="wa-stack wa-gap-s" style="padding: var(--wa-space-m); background: var(--wa-color-surface-default); border: var(--wa-border-width-s) solid var(--wa-color-purple-70); border-radius: var(--wa-border-radius-m); min-width: 640px;">
+    <div th:if="${!entries.isEmpty()}"
+         class="wa-grid wa-gap-s wa-align-items-center"
+         style="grid-template-columns: 4rem minmax(16rem, 1.4fr) minmax(12rem, 1fr) minmax(12rem, 1fr) minmax(8rem, 0.6fr) minmax(12rem, 0.8fr); background: var(--wa-color-purple-95); padding: var(--wa-space-xs) var(--wa-space-s); border-radius: var(--wa-border-radius-s);">
+        <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40);"
+              th:text="#{entries.col.id}"></span>
+        <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40);"
+              th:text="#{entries.col.project}"></span>
+        <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40);"
+              th:text="#{entries.col.date}"></span>
+        <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40);"
+              th:text="#{entries.col.time}"></span>
+        <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40); text-align: right;"
+              th:text="#{entries.col.duration}"></span>
+        <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40); text-align: right;"
+              th:text="#{entries.col.status}"></span>
+    </div>
+
+    <div th:if="${!entries.isEmpty()}" class="wa-stack wa-gap-s">
+        <div th:each="entry, iterStat : ${entries}"
+             class="wa-grid wa-gap-s wa-align-items-center"
+             style="grid-template-columns: 4rem minmax(16rem, 1.4fr) minmax(12rem, 1fr) minmax(12rem, 1fr) minmax(8rem, 0.6fr) minmax(12rem, 0.8fr); padding: var(--wa-space-s) var(--wa-space-m); border-bottom: var(--wa-border-width-s) solid var(--wa-color-surface-border);">
+            <span class="wa-text-s" style="color: var(--wa-color-neutral-40);">#<span th:text="${iterStat.count}"></span></span>
+
+            <div class="wa-stack wa-gap-2xs">
+                <div class="project-name" th:text="${projects[entry.projectId]?.name ?: 'Project #' + entry.projectId}"></div>
+            </div>
+
+            <div class="wa-cluster wa-gap-2xs wa-align-items-center">
+                <wa-icon name="calendar" style="color: var(--wa-color-neutral-40);"></wa-icon>
+                <span class="wa-text-s" style="color: var(--wa-color-neutral-10);" th:text="${#temporals.format(entry.entryDate, 'MMM dd, yyyy')}"></span>
+            </div>
+
+            <div class="wa-cluster wa-gap-2xs wa-align-items-center">
+                <wa-icon name="clock" style="color: var(--wa-color-neutral-40);"></wa-icon>
+                <span class="wa-text-s" style="color: var(--wa-color-neutral-10);" th:text="${#temporals.format(entry.startTime, 'HH:mm')}"></span>
+                <span class="wa-text-s" style="color: var(--wa-color-neutral-35); font-weight: var(--wa-font-weight-semibold);">→</span>
+                <span class="wa-text-s" style="color: var(--wa-color-neutral-10);" th:if="${entry.endTime}" th:text="${#temporals.format(entry.endTime, 'HH:mm')}"></span>
+                <span class="wa-text-s" style="color: var(--wa-color-neutral-10);" th:unless="${entry.endTime}" th:text="#{entry.time.now}"></span>
+            </div>
+
+            <div style="text-align: right;">
+                <div class="duration" style="color: var(--wa-color-neutral-10); background: var(--wa-color-purple-95); border-color: var(--wa-color-purple-80);" th:text="${entry.totalHours != null ? #numbers.formatDecimal(entry.totalHours, 1, 2) + 'h' : '0.00h'}"></div>
+            </div>
+
+            <div class="wa-cluster wa-gap-xs wa-align-items-center" style="justify-content: flex-end;">
+                <wa-badge th:if="${entry.synced}" variant="success" pill style="padding: var(--wa-space-2xs) var(--wa-space-m);">
+                    <span class="wa-text-s" style="display: inline-flex; min-width: 9rem; justify-content: center;" th:text="#{entry.status.synced}"></span>
+                </wa-badge>
+                <wa-badge th:unless="${entry.synced}" variant="warning" pill style="padding: var(--wa-space-2xs) var(--wa-space-m);">
+                    <span class="wa-text-s" style="display: inline-flex; min-width: 9rem; justify-content: center;" th:text="#{entry.status.pending}"></span>
+                </wa-badge>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${entries.isEmpty()}" class="wa-stack wa-gap-m wa-align-items-center" style="padding: var(--wa-space-2xl) 0; color: var(--wa-color-neutral-40);">
+        <wa-icon name="calendar-day" style="font-size: 4rem; color: var(--wa-color-purple-50); opacity: 0.35;"></wa-icon>
+        <h3 th:text="#{empty.no.entries.today}"></h3>
+        <p th:text="#{empty.start.tracking}"></p>
+    </div>
+</wa-card>
+</div>

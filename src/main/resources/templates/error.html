@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" class="wa-theme-default" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{error.page.title}"></title>
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/webawesome.css"/>
+    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/themes/matter.css"/>
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/color/palettes/default.css"/>
+    <style>
+        body {
+            background: var(--wa-color-neutral-95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <wa-card style="max-width: 500px; margin: var(--wa-space-xl);">
+        <div class="wa-stack wa-gap-l" style="text-align: center; padding: var(--wa-space-xl);">
+            <wa-icon name="exclamation-triangle" style="font-size: 4rem; color: var(--wa-color-danger-fill-loud);"></wa-icon>
+
+            <div class="wa-stack wa-gap-xs">
+                <h1 style="margin: 0; font-size: var(--wa-font-size-2xl); color: var(--wa-color-neutral-10);"
+                    th:text="${status ?: '500'}"></h1>
+                <p style="margin: 0; color: var(--wa-color-neutral-40);"
+                   th:text="${error ?: 'An unexpected error occurred'}"></p>
+            </div>
+
+            <wa-callout variant="warning" th:if="${message}">
+                <strong th:text="#{error.details}"></strong><br>
+                <span th:text="${message}"></span>
+            </wa-callout>
+
+            <wa-button variant="neutral" href="/">
+                <wa-icon name="home" slot="prefix"></wa-icon>
+                <span th:text="#{error.back.home}"></span>
+            </wa-button>
+        </div>
+    </wa-card>
+</body>
+</html>

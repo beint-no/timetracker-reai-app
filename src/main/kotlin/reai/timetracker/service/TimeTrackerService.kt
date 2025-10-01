@@ -42,7 +42,7 @@ class TimeTrackerService(
     }
 
     @Transactional
-    fun stopTimer(employeeId: Long, accessToken: String?): TimeEntry? {
+    fun stopTimer(employeeId: Long?, accessToken: String?): TimeEntry? {
         val activeEntry = repository.findByEmployeeIdAndEndTimeIsNull(employeeId)
             .orElse(null) ?: return null
 
@@ -125,10 +125,10 @@ class TimeTrackerService(
     fun getCurrentTimer(employeeId: Long) =
         repository.findByEmployeeIdAndEndTimeIsNull(employeeId)
 
-    fun getTimeEntries(employeeId: Long, accessToken: String?): List<TimeEntry> {
-//        validateEmployeeAccess(employeeId, accessToken)
-        return repository.findByEmployeeIdOrderByStartTimeDesc(employeeId)
-    }
+    fun getTimeEntries(employeeId: Long, projectId: Long? = null): List<TimeEntry> =
+        projectId?.let {
+            repository.findByEmployeeIdAndProjectIdOrderByStartTimeDesc(employeeId, it)
+        } ?: repository.findByEmployeeIdOrderByStartTimeDesc(employeeId)
 
     @Transactional
     fun updateEntry(id: Long): TimeEntry? =
@@ -242,8 +242,36 @@ class TimeTrackerService(
         }
     }
 
-    fun getAllTimeEntries(employeeId: Long): List<TimeEntry> =
-        repository.findByEmployeeIdOrderByStartTimeDesc(employeeId)
+    fun getAllTimeEntries(employeeId: Long, projectId: Long? = null): List<TimeEntry> =
+        projectId?.let {
+            repository.findByEmployeeIdAndProjectIdOrderByStartTimeDesc(employeeId, it)
+        } ?: repository.findByEmployeeIdOrderByStartTimeDesc(employeeId)
+
+    @Transactional
+    fun deleteActiveTimer(employeeId: Long?): Boolean {
+        val activeEntry = repository.findByEmployeeIdAndEndTimeIsNull(employeeId)
+            .orElse(null) ?: return false
+
+        repository.delete(activeEntry)
+        logger.info("Deleted active timer for employee $employeeId (entry id: ${activeEntry.id})")
+        return true
+    }
+
+    @Transactional
+    fun closeActiveTimer(employeeId: Long?): TimeEntry? {
+        val activeEntry = repository.findByEmployeeIdAndEndTimeIsNull(employeeId)
+            .orElse(null) ?: return null
+
+        return activeEntry.apply {
+            endTime = startTime
+            endTimeMillis = startTimeMillis
+            totalMilliseconds = 0L
+            totalHours = 0.0
+            synced = false
+        }.let(repository::save).also {
+            logger.info("Closed active timer for employee $employeeId (set endTime = startTime)")
+        }
+    }
 
 
     private fun TimeEntry.calculateDurationMetrics() {
@@ -331,11 +359,6 @@ class TimeTrackerService(
     private fun markEntriesAsSynced(entries: List<TimeEntry>) {
         entries.forEach { it.synced = true }
         repository.saveAll(entries)
-    }
-
-    private fun validateEmployeeAccess(employeeId: Long, accessToken: String?) {
-        val employee = reaiApiService.getEmployee(employeeId, accessToken)
-        checkNotNull(employee) { "Employee not found or access denied" }
     }
 
     private fun millisecondsToHours(milliseconds: Long): Double =

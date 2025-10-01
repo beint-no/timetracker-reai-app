@@ -35,11 +35,10 @@ builder:
 # Use a different ssh user than root
 ssh:
   user: ubuntu
-
+  keys:
+    - ~/.ssh/respiro-vuxie
 
 env:
-  clear:
-    SPRING_PROFILES_ACTIVE: production
   secret:
     - DB_URL_PROD
     - DB_USERNAME_PROD

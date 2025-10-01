@@ -19,10 +19,7 @@ data class Employee(
     @Column(nullable = false, unique = true)
     var email: String = "",
 
-) : Serializable {
-    val displayName: String
-        get() = "$name ($email)"
-}
+) : Serializable
 
 data class EmployeesDto(
     val id: Long?,

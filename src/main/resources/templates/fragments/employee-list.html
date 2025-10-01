@@ -1,0 +1,5 @@
+<wa-option th:each="employee : ${employees}"
+           th:value="${employee.id}"
+           th:text="${employee.name}"
+           th:selected="${selectedEmployeeId != null && selectedEmployeeId == employee.id}">
+</wa-option>

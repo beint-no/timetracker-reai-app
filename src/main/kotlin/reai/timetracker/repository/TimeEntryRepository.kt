@@ -12,11 +12,16 @@ import java.util.*
 interface TimeEntryRepository : JpaRepository<TimeEntry, Long> {
 
     fun findByEmployeeIdAndEndTimeIsNull(
-        employeeId: Long
+        employeeId: Long?
     ): Optional<TimeEntry>
 
     fun findByEmployeeIdOrderByStartTimeDesc(
         employeeId: Long,
+    ): List<TimeEntry>
+
+    fun findByEmployeeIdAndProjectIdOrderByStartTimeDesc(
+        employeeId: Long,
+        projectId: Long
     ): List<TimeEntry>
 
 

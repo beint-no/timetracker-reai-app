@@ -1,0 +1,6 @@
+<wa-option value="all" th:selected="${selectedProjectId == null || selectedProjectId == 'all'}">All Projects</wa-option>
+<wa-option th:each="project : ${projects}"
+           th:value="${project.id}"
+           th:text="${project.name}"
+           th:selected="${selectedProjectId != null && selectedProjectId == project.id.toString()}">
+</wa-option>

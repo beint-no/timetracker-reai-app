@@ -1,0 +1,4 @@
+<script th:inline="javascript">
+    const msg = /*[[${success} ? #messages.msg('notify.sync.success') : #messages.msg('notify.sync.failed')]]*/;
+    showNotification(msg, /*[[${success} ? 'success' : 'error']]]*/);
+</script>

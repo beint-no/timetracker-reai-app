@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en" class="wa-theme-default" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{app.title}"></title>
+
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/webawesome.css"/>
+    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/themes/matter.css"/>
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/color/palettes/default.css"/>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--wa-color-surface-lowered);
+            margin: 0;
+        }
+
+        .header {
+            background: var(--wa-color-surface-default);
+            border-bottom: var(--wa-border-width-s) solid var(--wa-color-surface-border);
+            padding: var(--wa-space-m) var(--wa-space-xl);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: var(--wa-font-size-xl);
+            font-weight: var(--wa-font-weight-bold);
+            color: var(--wa-color-brand-fill-loud);
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--wa-space-xl);
+        }
+
+        .header-sync {
+            --wa-button-background: var(--wa-color-purple-60);
+            --wa-button-border-color: var(--wa-color-purple-70);
+            --wa-button-color: var(--wa-color-purple-05);
+        }
+
+        .header-sync:hover,
+        .header-sync:focus-visible {
+            --wa-button-background: var(--wa-color-purple-50);
+            --wa-button-border-color: var(--wa-color-purple-60);
+        }
+
+        .entries-scroll {
+            overflow-x: auto;
+        }
+
+        .header-sync {
+            --wa-button-background: var(--wa-color-purple-60);
+            --wa-button-border-color: var(--wa-color-purple-70);
+            --wa-button-color: var(--wa-color-purple-05);
+        }
+
+        .header-sync:hover,
+        .header-sync:focus-visible {
+            --wa-button-background: var(--wa-color-purple-50);
+            --wa-button-border-color: var(--wa-color-purple-60);
+        }
+
+        .timer-input-area {
+            padding: var(--wa-space-l);
+            border: var(--wa-border-width-s) solid var(--wa-color-brand-border-normal);
+            border-radius: var(--wa-border-radius-l);
+            background: var(--wa-color-surface-default);
+            box-shadow: 0 4px 12px rgba(3, 169, 244, 0.12);
+        }
+
+        .timer-input-area.active {
+            border-color: var(--wa-color-success-border-normal);
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.08), var(--wa-color-surface-default));
+        }
+
+        .timer-display {
+            font-size: var(--wa-font-size-2xl);
+            font-weight: var(--wa-font-weight-bold);
+            font-family: 'Courier New', monospace;
+            color: var(--wa-color-text-normal);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .timer-display.running {
+            color: var(--wa-color-success-fill-loud);
+        }
+
+        .project-name {
+            font-weight: var(--wa-font-weight-semibold);
+            font-size: var(--wa-font-size-l);
+            color: var(--wa-color-neutral-10);
+        }
+
+        .duration {
+            font-weight: var(--wa-font-weight-bold);
+            font-family: 'Courier New', monospace;
+            font-size: var(--wa-font-size-l);
+            color: var(--wa-color-purple-40);
+            background: var(--wa-color-purple-95);
+            padding: var(--wa-space-xs) var(--wa-space-s);
+            border-radius: var(--wa-border-radius-s);
+            border: var(--wa-border-width-s) solid var(--wa-color-purple-80);
+        }
+
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+<wa-dialog id="token-dialog" th:attr="label=#{token.dialog.title}">
+        <div class="wa-stack wa-gap-m">
+            <div style="text-align: center;">
+                <wa-icon name="exclamation-triangle" style="font-size: 3rem; color: var(--wa-color-danger-fill-loud);"></wa-icon>
+            </div>
+            <div class="wa-stack wa-gap-2xs">
+                <h3 style="margin: 0;" th:text="#{token.dialog.heading}"></h3>
+                <p style="margin: 0; color: var(--wa-color-neutral-40);" th:text="#{token.dialog.message}"></p>
+            </div>
+            <div class="wa-cluster wa-gap-s" style="justify-content: center;">
+                <wa-button variant="primary" onclick="goToReai()">
+                    <wa-icon name="external-link" slot="prefix"></wa-icon>
+                    <span th:text="#{token.dialog.primary}"></span>
+                </wa-button>
+                <wa-button variant="neutral" onclick="closeTokenDialog()" th:text="#{token.dialog.close}"></wa-button>
+            </div>
+        </div>
+    </wa-dialog>
+<header class="header">
+        <div class="header-content">
+            <div class="wa-split wa-align-items-center">
+                <div class="wa-cluster wa-gap-xs logo">
+                    <wa-icon name="clock"></wa-icon>
+                    <span th:text="#{app.title}"></span>
+                </div>
+                <div class="wa-cluster wa-gap-m wa-align-items-center" style="flex-wrap: wrap;">
+                    <div class="wa-cluster wa-gap-xs wa-align-items-center" style="min-width: 250px;">
+                        <span class="wa-text-s" style="color: var(--wa-color-neutral-40);" th:text="#{header.select.employee}"></span>
+                        <wa-select id="employee-select"
+                                  size="small"
+                                  th:attr="placeholder=#{header.select.employee},aria-label=#{header.select.employee}"
+                                  hx-get="/htmx/employees"
+                                  hx-trigger="load"
+                                  hx-swap="innerHTML"
+                                  hx-target="this"
+                                  onchange="handleEmployeeChange(event)">
+                        </wa-select>
+                    </div>
+                    <wa-button variant="primary" size="small" class="header-sync"
+                              hx-post="/htmx/sync"
+                              hx-trigger="click"
+                              hx-vals='js:{employeeId: getSelectedEmployee()}'>
+                        <wa-icon name="sync" slot="prefix"></wa-icon>
+                        <span th:text="#{header.btn.sync}"></span>
+                    </wa-button>
+                </div>
+            </div>
+        </div>
+    </header>
+<main class="main-content">
+        <div class="wa-stack wa-gap-xl">
+<div class="wa-grid wa-gap-m" style="--min-column-size: 300px;">
+<wa-card>
+                    <div class="wa-stack wa-gap-m">
+                        <div class="wa-stack wa-gap-s">
+                            <h3 style="margin: 0; font-size: var(--wa-font-size-l); font-weight: var(--wa-font-weight-semibold);">
+                                <wa-icon name="folder" style="vertical-align: middle;"></wa-icon>
+                                <span th:text="#{timer.select.project}"></span>
+                            </h3>
+                            <wa-select id="timer-project-select"
+                                      size="medium"
+                                      th:placeholder="#{timer.select.project}"
+                                      hx-get="/htmx/projects"
+                                      hx-trigger="load"
+                                      hx-swap="innerHTML"
+                                      hx-target="this"
+                                      onchange="handleProjectChange(event)">
+                            </wa-select>
+                        </div>
+<div id="stats-dashboard" style="display: none;">
+                            <wa-divider></wa-divider>
+                            <div id="stats-content"></div>
+                        </div>
+                    </div>
+                </wa-card>
+<wa-card>
+                    <div class="timer-input-area" id="timer-input-area">
+                        <div class="wa-stack wa-gap-m wa-align-items-center" style="text-align: center;">
+                            <div class="timer-display" id="timer-time">00:00:00</div>
+
+                            <div class="wa-cluster wa-gap-m" style="justify-content: center;">
+                                <wa-button id="start-btn" variant="success" size="large" onclick="startTimerClick()">
+                                    <wa-icon name="play" slot="prefix"></wa-icon>
+                                    <span th:text="#{timer.btn.start}"></span>
+                                </wa-button>
+
+                                <wa-button id="stop-btn" variant="danger" size="large" style="display: none;"
+                                          hx-post="/htmx/timer/stop"
+                                          hx-trigger="click"
+                                          hx-target="#timer-display"
+                                          hx-vals='js:{employeeId: getSelectedEmployee()}'>
+                                    <wa-icon name="stop" slot="prefix"></wa-icon>
+                                    <span th:text="#{timer.btn.stop}"></span>
+                                </wa-button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="timer-display" style="margin-top: var(--wa-space-m);"></div>
+                </wa-card>
+            </div>
+<wa-tab-group id="entries-tab-group">
+                <wa-tab slot="nav" panel="today" th:text="#{tab.today}"></wa-tab>
+                <wa-tab slot="nav" panel="all" th:text="#{tab.all}"></wa-tab>
+
+                <wa-tab-panel name="today">
+                    <div id="entries-content-today">
+                        <div class="wa-stack wa-gap-m" style="text-align: center; padding: var(--wa-space-3xl);">
+                            <wa-icon name="inbox" style="font-size: 4rem; opacity: 0.3;"></wa-icon>
+                            <h3 th:text="#{empty.no.entries}"></h3>
+                            <p style="color: var(--wa-color-neutral-40);" th:text="#{empty.select.employee}"></p>
+                        </div>
+                    </div>
+                </wa-tab-panel>
+
+                <wa-tab-panel name="all">
+                    <div id="entries-content-all">
+                        <div class="wa-stack wa-gap-m" style="text-align: center; padding: var(--wa-space-3xl);">
+                            <wa-icon name="inbox" style="font-size: 4rem; opacity: 0.3;"></wa-icon>
+                            <h3 th:text="#{empty.no.entries.all}"></h3>
+                            <p style="color: var(--wa-color-neutral-40);" th:text="#{empty.start.tracking.all.entries}"></p>
+                        </div>
+                    </div>
+                </wa-tab-panel>
+            </wa-tab-group>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        let timerInterval = null;
+        let timerStartTime = null;
+        let activeTab = 'today';
+
+        // Token management
+        function getAuthToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('access_token');
+            if (urlToken) {
+                localStorage.setItem('reai_access_token', 'Bearer ' + urlToken);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            return localStorage.getItem('reai_access_token') || '';
+        }
+
+        function isTokenExpired(token) {
+            if (!token || !token.startsWith('Bearer ')) return true;
+            try {
+                const jwtToken = token.replace('Bearer ', '');
+                const payload = JSON.parse(atob(jwtToken.split('.')[1]));
+                return Date.now() >= payload.exp * 1000;
+            } catch (error) {
+                return true;
+            }
+        }
+
+        function checkToken() {
+            const token = getAuthToken();
+            if (!token || isTokenExpired(token)) {
+                showTokenDialog();
+                return false;
+            }
+            return true;
+        }
+
+        function showTokenDialog() {
+            document.getElementById('token-dialog').open = true;
+        }
+
+        function closeTokenDialog() {
+            document.getElementById('token-dialog').open = false;
+        }
+
+        function goToReai() {
+            window.location.href = /*[[${reaiLoginUrl}]]*/ 'http://localhost:8080/login';
+        }
+
+        // Get selected values from DOM (single source of truth)
+        function getSelectedEmployee() {
+            const value = document.getElementById('employee-select')?.value;
+            return value && value !== '' ? Number(value) : null;
+        }
+
+        function getSelectedProject() {
+            const value = document.getElementById('timer-project-select')?.value;
+            if (value === 'all' || !value) return null;
+            return Number(value);
+        }
+
+        function getSelectedProjectName() {
+            const select = document.getElementById('timer-project-select');
+            if (!select ||!select.value) return '';
+            const option = select.querySelector(`wa-option[value="${select.value}"]`);
+            return option ? option.textContent : '';
+        }
+
+        // Handle employee change
+        function handleEmployeeChange(event) {
+            const employeeId = getSelectedEmployee();
+            if (!employeeId) {
+                document.getElementById('stats-dashboard').style.display = 'none';
+                return;
+            }
+
+            // Save to session
+            fetch('/session/employee', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': getAuthToken()
+                },
+                body: `employeeId=${employeeId}`
+            });
+
+            // Load timer and entries
+            htmx.ajax('GET', '/htmx/timer/current', {
+                target: '#timer-display',
+                swap: 'innerHTML',
+                values: { employeeId }
+            });
+
+            loadEntriesForTab(activeTab);
+            updateStatsDashboard();
+        }
+
+        // Handle project change
+        function handleProjectChange(event) {
+            const projectId = getSelectedProject();
+            const projectValue = document.getElementById('timer-project-select')?.value || '';
+
+            // Save to session
+            fetch('/session/project', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': getAuthToken()
+                },
+                body: `projectId=${encodeURIComponent(projectValue)}`
+            });
+
+            // Reload entries and stats
+            if (getSelectedEmployee()) {
+                loadEntriesForTab(activeTab);
+                updateStatsDashboard();
+            }
+        }
+
+        // Start timer
+        function startTimerClick() {
+            if (!checkToken()) return;
+
+            const employeeId = getSelectedEmployee();
+            const projectId = getSelectedProject();
+
+            if (!employeeId) {
+                showNotification('Please select an employee first', 'danger');
+                return;
+            }
+
+            if (!projectId) {
+                showNotification('Please select a project', 'warning');
+                return;
+            }
+
+            htmx.ajax('POST', '/htmx/timer/start', {
+                target: '#timer-display',
+                swap: 'innerHTML',
+                values: { employeeId, projectId, projectName: getSelectedProjectName() }
+            });
+        }
+
+        // Load entries for tab
+        function loadEntriesForTab(tabName) {
+            const employeeId = getSelectedEmployee();
+            if (!employeeId) return;
+
+            const projectId = getSelectedProject();
+            const values = { employeeId };
+            if (projectId) values.projectId = projectId;
+
+            const endpoint = tabName === 'all' ? '/htmx/entries/all' : '/htmx/entries/today';
+            const targetId = tabName === 'all' ? 'entries-content-all' : 'entries-content-today';
+
+            if (tabName === 'all') values.limit = 50;
+
+            htmx.ajax('GET', endpoint, { target: `#${targetId}`, swap: 'innerHTML', values });
+        }
+
+        // Update stats dashboard
+        function updateStatsDashboard() {
+            const employeeId = getSelectedEmployee();
+            if (!employeeId) {
+                document.getElementById('stats-dashboard').style.display = 'none';
+                return;
+            }
+
+            const projectId = getSelectedProject();
+            const values = { employeeId, tab: activeTab };
+            if (projectId) values.projectId = projectId;
+
+            htmx.ajax('GET', '/htmx/stats', {
+                target: '#stats-content',
+                swap: 'innerHTML',
+                values
+            }).then(() => {
+                document.getElementById('stats-dashboard').style.display = 'block';
+            });
+        }
+
+        // Timer display functions
+        function startTimerDisplay(startTime) {
+            timerStartTime = new Date(startTime);
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                const now = new Date();
+                const diff = now - timerStartTime;
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+
+                const display = document.getElementById('timer-time');
+                if (display) {
+                    display.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    display.classList.add('running');
+                }
+            }, 1000);
+
+            document.getElementById('timer-input-area').classList.add('active');
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'inline-flex';
+        }
+
+        function stopTimerDisplay() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            const display = document.getElementById('timer-time');
+            if (display) {
+                display.textContent = '00:00:00';
+                display.classList.remove('running');
+            }
+            document.getElementById('timer-input-area').classList.remove('active');
+            document.getElementById('start-btn').style.display = 'inline-flex';
+            document.getElementById('stop-btn').style.display = 'none';
+        }
+
+        // Notification
+        function showNotification(message, variant = 'success') {
+            const notification = document.createElement('wa-callout');
+            notification.variant = variant;
+            notification.closable = true;
+            notification.style.cssText = 'position: fixed; top: 1rem; right: 1rem; z-index: 10000; min-width: 300px; animation: slideIn 0.3s ease-out;';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transition = 'opacity 0.5s';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 500);
+            }, 4000);
+        }
+
+        // Automatically load entries once HTMX populates selects
+        document.body.addEventListener('htmx:afterSwap', (event) => {
+            if (event.detail?.target?.id === 'employee-select') {
+                const employeeId = getSelectedEmployee();
+                if (employeeId) {
+                    loadEntriesForTab(activeTab);
+                    updateStatsDashboard();
+                    htmx.ajax('GET', '/htmx/timer/current', {
+                        target: '#timer-display',
+                        swap: 'innerHTML',
+                        values: { employeeId }
+                    });
+                }
+            }
+
+            if (event.detail?.target?.id === 'timer-project-select') {
+                const employeeId = getSelectedEmployee();
+                if (employeeId) {
+                    loadEntriesForTab(activeTab);
+                    updateStatsDashboard();
+                }
+            }
+        });
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            checkToken();
+
+            // Tab changes
+            document.getElementById('entries-tab-group').addEventListener('wa-tab-show', (event) => {
+                activeTab = event.detail.name;
+                loadEntriesForTab(activeTab);
+            });
+
+            // Load initial data if employee is selected
+            setTimeout(() => {
+                const employeeId = getSelectedEmployee();
+                if (employeeId) {
+                    htmx.ajax('GET', '/htmx/timer/current', {
+                        target: '#timer-display',
+                        swap: 'innerHTML',
+                        values: { employeeId }
+                    });
+                    loadEntriesForTab('all');
+                    updateStatsDashboard();
+                }
+            }, 500);
+        });
+
+        // HTMX events
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            // Timer display updates
+            if (evt.detail.target.id === 'timer-display') {
+                const timerDiv = evt.detail.target.querySelector('[data-running]');
+                if (timerDiv) {
+                    const running = timerDiv.getAttribute('data-running');
+                    const startTime = timerDiv.getAttribute('data-start-time');
+                    if (running === 'true' && startTime) {
+                        startTimerDisplay(startTime);
+                    } else {
+                        stopTimerDisplay();
+                    }
+                } else {
+                    stopTimerDisplay();
+                }
+            }
+
+            // Update stats when entries load
+            if (evt.detail.target.id.startsWith('entries-content')) {
+                updateStatsDashboard();
+            }
+        });
+
+        // Add auth header to all HTMX requests
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            const token = getAuthToken();
+            if (!token || isTokenExpired(token)) {
+                evt.preventDefault();
+                showTokenDialog();
+                return;
+            }
+            evt.detail.headers['Authorization'] = token;
+        });
+
+        // Handle auth errors
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            if (evt.detail.xhr.status === 401) {
+                showTokenDialog();
+            }
+        });
+    </script>
+</body>
+</html>

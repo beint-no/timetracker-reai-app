@@ -19,7 +19,6 @@ repositories {
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_24)
-        freeCompilerArgs.add("-Xannotation-default-target=param-property")
     }
 }
 

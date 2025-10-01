@@ -1,0 +1,49 @@
+
+<div th:if="${hasTimer}"
+     th:attr="data-running='true',data-start-time=${timer.startTime},data-employee-id=${timer.employeeId}">
+        <wa-card style="margin: 0;">
+            <div class="wa-split wa-align-items-center">
+                <div class="wa-stack wa-gap-2xs">
+                    <div class="project-name" th:text="${projectName ?: 'Unknown Project'}"></div>
+                    <div style="font-size: var(--wa-font-size-s); color: var(--wa-color-neutral-40);"
+                         th:text="#{timer.status.started.at} + ' ' + ${#temporals.format(timer.startTime, 'HH:mm')}"></div>
+                </div>
+                <wa-badge variant="success" pill>
+                    <wa-icon name="circle" slot="prefix" style="font-size: 0.6rem;"></wa-icon>
+                    <span th:text="#{timer.status.running}"></span>
+                </wa-badge>
+            </div>
+        </wa-card>
+    </div>
+<div th:unless="${hasTimer}" th:attr="data-running='false'">
+        <div style="padding: var(--wa-space-m); text-align: center;">
+            <p style="margin: 0; color: var(--wa-color-neutral-40);" th:text="#{timer.status.no.active}"></p>
+        </div>
+    </div>
+<script th:if="${#ctx.containsVariable('success') and success and hasTimer}">
+    showNotification('Timer started', 'success');
+</script>
+
+<script th:if="${#ctx.containsVariable('success') and success and !hasTimer}">
+    showNotification('Timer stopped', 'success');
+</script>
+
+<script th:if="${#ctx.containsVariable('errorMessage') and errorMessage}" th:inline="text">
+    showNotification('[[${errorMessage}]]', 'danger');
+</script>
+<div th:if="${showCloseButton}" style="margin-top: var(--wa-space-m);">
+    <wa-callout variant="warning">
+        <div class="wa-split wa-align-items-center wa-gap-m">
+            <span th:text="#{timer.active.exists}"></span>
+            <wa-button variant="danger" size="small"
+                      hx-post="/htmx/timer/close"
+                      hx-trigger="click"
+                      hx-target="#timer-display"
+                      hx-swap="innerHTML"
+                      th:attr="hx-vals=|{'employeeId': '${timer.employeeId}'}|">
+                <wa-icon name="stop" slot="prefix"></wa-icon>
+                <span th:text="#{timer.btn.force.stop}"></span>
+            </wa-button>
+        </div>
+    </wa-callout>
+</div>

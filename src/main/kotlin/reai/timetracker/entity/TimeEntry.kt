@@ -52,12 +52,4 @@ class TimeEntry : Serializable {
         this.employeeId = employeeId
         this.projectId = projectId
     }
-
-    fun stop() {
-        endTime = LocalDateTime.now()
-    }
-
-    val isActive: Boolean
-        get() = endTime == null
-
 }

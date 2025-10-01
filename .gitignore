@@ -46,7 +46,7 @@ bin/
 /nbdist/
 /.nb-gradle/
 /build
-
+/.kamal
 # OS generated files
 .DS_Store
 .DS_Store?

@@ -6,7 +6,7 @@ build/
 /build/
 /*/build/
 /**/build/
-
+/.kamal
 # Gradle cache and build output cleanup
 buildOutputCleanup.lock
 cache.properties

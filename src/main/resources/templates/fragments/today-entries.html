@@ -1,8 +1,8 @@
-<div class="entries-scroll">
-<wa-card class="wa-stack wa-gap-s" style="padding: var(--wa-space-m); background: var(--wa-color-surface-default); border: var(--wa-border-width-s) solid var(--wa-color-purple-70); border-radius: var(--wa-border-radius-m); min-width: 640px;">
+<wa-card style="background: var(--wa-color-surface-default); border: var(--wa-border-width-s) solid var(--wa-color-purple-70); border-radius: var(--wa-border-radius-m); overflow-x: auto; -webkit-overflow-scrolling: touch;">
+<div class="wa-stack wa-gap-s" style="padding: var(--wa-space-m); min-width: 640px;">
     <div th:if="${!entries.isEmpty()}"
          class="wa-grid wa-gap-s wa-align-items-center"
-         style="grid-template-columns: 4rem minmax(16rem, 1.4fr) minmax(12rem, 1fr) minmax(12rem, 1fr) minmax(8rem, 0.6fr) minmax(12rem, 0.8fr); background: var(--wa-color-purple-95); padding: var(--wa-space-xs) var(--wa-space-s); border-radius: var(--wa-border-radius-s);">
+         style="grid-template-columns: 4rem minmax(16rem, 1.4fr) minmax(12rem, 1fr) minmax(12rem, 1fr) minmax(8rem, 0.6fr) minmax(12rem, 0.8fr); background: var(--wa-color-purple-95); padding: var(--wa-space-s) var(--wa-space-m); border-radius: var(--wa-border-radius-s); min-width: 640px;">
         <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40);"
               th:text="#{entries.col.id}"></span>
         <span class="wa-text-s" style="font-weight: var(--wa-font-weight-semibold); text-transform: uppercase; letter-spacing: 0.04em; color: var(--wa-color-purple-40);"
@@ -17,7 +17,7 @@
               th:text="#{entries.col.status}"></span>
     </div>
 
-    <div th:if="${!entries.isEmpty()}" class="wa-stack wa-gap-s">
+    <div th:if="${!entries.isEmpty()}" class="wa-stack wa-gap-s" style="min-width: 640px;">
         <div th:each="entry, iterStat : ${entries}"
              class="wa-grid wa-gap-s wa-align-items-center"
              style="grid-template-columns: 4rem minmax(16rem, 1.4fr) minmax(12rem, 1fr) minmax(12rem, 1fr) minmax(8rem, 0.6fr) minmax(12rem, 0.8fr); padding: var(--wa-space-s) var(--wa-space-m); border-bottom: var(--wa-border-width-s) solid var(--wa-color-surface-border);">
@@ -40,16 +40,16 @@
                 <span class="wa-text-s" style="color: var(--wa-color-neutral-10);" th:unless="${entry.endTime}" th:text="#{entry.time.now}"></span>
             </div>
 
-            <div style="text-align: right;">
-                <div class="duration" style="color: var(--wa-color-neutral-10); background: var(--wa-color-purple-95); border-color: var(--wa-color-purple-80);" th:text="${entry.totalHours != null ? #numbers.formatDecimal(entry.totalHours, 1, 2) + 'h' : '0.00h'}"></div>
+            <div style="text-align: right; display: flex; justify-content: flex-end;">
+                <div class="duration" style="color: var(--wa-color-neutral-10); background: var(--wa-color-purple-95); border-color: var(--wa-color-purple-80); display: inline-block;" th:text="${entry.totalHours != null ? #numbers.formatDecimal(entry.totalHours, 1, 2) + 'h' : '0.00h'}"></div>
             </div>
 
-            <div class="wa-cluster wa-gap-xs wa-align-items-center" style="justify-content: flex-end;">
-                <wa-badge th:if="${entry.synced}" variant="success" pill style="padding: var(--wa-space-2xs) var(--wa-space-m);">
-                    <span class="wa-text-s" style="display: inline-flex; min-width: 9rem; justify-content: center;" th:text="#{entry.status.synced}"></span>
+            <div style="text-align: right; display: flex; justify-content: flex-end;">
+                <wa-badge th:if="${entry.synced}" variant="success" pill size="large">
+                    <span th:text="#{entry.status.synced}"></span>
                 </wa-badge>
-                <wa-badge th:unless="${entry.synced}" variant="warning" pill style="padding: var(--wa-space-2xs) var(--wa-space-m);">
-                    <span class="wa-text-s" style="display: inline-flex; min-width: 9rem; justify-content: center;" th:text="#{entry.status.pending}"></span>
+                <wa-badge th:unless="${entry.synced}" variant="warning" pill size="large">
+                    <span th:text="#{entry.status.pending}"></span>
                 </wa-badge>
             </div>
         </div>
@@ -61,7 +61,7 @@
         <p th:text="#{empty.start.tracking}"></p>
     </div>
 
-    <div th:if="${entryCount > 0 && totalPages > 1}" class="wa-stack wa-gap-m">
+    <div th:if="${entryCount > 0 && totalPages > 1}" class="wa-stack wa-gap-m" style="min-width: 640px;">
         <wa-divider></wa-divider>
         <div class="wa-split wa-align-items-center">
             <span class="wa-text-s" style="color: var(--wa-color-neutral-40);"
@@ -106,5 +106,5 @@
             </wa-button-group>
         </div>
     </div>
-</wa-card>
 </div>
+</wa-card>

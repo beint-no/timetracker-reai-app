@@ -28,7 +28,7 @@ reai:
     base-url: '${REAI_API_BASE_URL:http://localhost:8080}'
     validate-endpoint: /api/auth/validate-token
   login:
-    url: '${REAI_LOGIN_URL:https://your-reai-url.com/login}'
+    url: '${REAI_LOGIN_URL:http://localhost:8080}'
 
 logging:
   level:

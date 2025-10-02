@@ -78,8 +78,13 @@ class TimeTrackerViewController(
         @RequestParam employeeId: Long,
         @RequestParam projectName: String,
         @RequestHeader(value = "Authorization", required = false) authHeader: String?,
+        session: jakarta.servlet.http.HttpSession,
         model: Model
     ): String {
+        // Save to session
+        session.setAttribute("selectedEmployeeId", employeeId)
+        session.setAttribute("selectedProjectId", projectId.toString())
+
         // Check if there's already an active timer BEFORE calling service
         val existingTimer = timeTrackerService.getCurrentTimer(employeeId)
         if (existingTimer.isPresent) {

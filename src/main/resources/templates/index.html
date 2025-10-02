@@ -63,18 +63,6 @@
             overflow-x: auto;
         }
 
-        .header-sync {
-            --wa-button-background: var(--wa-color-purple-60);
-            --wa-button-border-color: var(--wa-color-purple-70);
-            --wa-button-color: var(--wa-color-purple-05);
-        }
-
-        .header-sync:hover,
-        .header-sync:focus-visible {
-            --wa-button-background: var(--wa-color-purple-50);
-            --wa-button-border-color: var(--wa-color-purple-60);
-        }
-
         .timer-input-area {
             padding: var(--wa-space-l);
             border: var(--wa-border-width-s) solid var(--wa-color-brand-border-normal);
@@ -517,10 +505,22 @@
             }
         });
 
-        // Reload entries after sync
+        // Reload entries after timer actions
         document.body.addEventListener('htmx:afterSwap', function(evt) {
+            if (evt.detail.target.id === 'timer-display') {
+                // Reload entries when timer starts or stops
+                const employeeId = getSelectedEmployee();
+                if (employeeId) {
+                    loadEntriesForTab(activeTab);
+                }
+            }
+
+            // Reload entries after sync
             if (evt.detail.target.id === 'notification-area') {
-                loadEntriesForTab(activeTab);
+                const employeeId = getSelectedEmployee();
+                if (employeeId) {
+                    loadEntriesForTab(activeTab);
+                }
             }
         });
     </script>

@@ -13,44 +13,13 @@ Modern time tracking application built with HTMX, Thymeleaf, and Spring Boot. Fe
 - 🔌 **REST API**: Backward-compatible JSON endpoints
 
 ## Tech Stack
-
 ### Backend
-- **Kotlin** - Primary language
-- **Spring Boot 3.5.6** - Application framework
-- **Spring Data JPA** - Database access
-- **PostgreSQL** - Database
-- **Flyway** - Database migrations
-- **Thymeleaf** - Server-side templates
-
+- **Kotlin**
+- **Spring Boot**
+- **PostgreSQL**
+- **Flyway**
+- **Thymeleaf**
 ### Frontend
-- **HTMX 2.0.7** - Dynamic HTML updates
-- **Web Awesome 3.0.0-beta.6** - UI components
-- **Vanilla JavaScript** - Minimal client-side logic
+- **HTMX**
+- **Web Awesome**
 
-## Getting Started
-
-### Prerequisites
-
-- Java 24
-- PostgreSQL 18
-- Gradle 9.1.0
-
-### Database Setup
-
-```sql
-CREATE DATABASE timetracker;
-CREATE USER timetracker_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE timetracker TO timetracker_user;
-```
-### Build & Run
-
-```bash
-# Build
-./gradlew clean build
-
-# Run
-./gradlew bootRun
-
-# Or run JAR
-java -jar build/libs/reai-timetracker-0.0.1-SNAPSHOT.jar
-```

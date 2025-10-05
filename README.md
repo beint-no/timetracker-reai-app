@@ -23,8 +23,8 @@ Modern time tracking application built with HTMX, Thymeleaf, and Spring Boot. Fe
 - **Thymeleaf** - Server-side templates
 
 ### Frontend
-- **HTMX 1.9.12** - Dynamic HTML updates
-- **Web Awesome 3.0** - UI components
+- **HTMX 2.0.7** - Dynamic HTML updates
+- **Web Awesome 3.0.0-beta.6** - UI components
 - **Vanilla JavaScript** - Minimal client-side logic
 
 ## Getting Started
@@ -32,8 +32,8 @@ Modern time tracking application built with HTMX, Thymeleaf, and Spring Boot. Fe
 ### Prerequisites
 
 - Java 24
-- PostgreSQL 12+
-- Gradle 9.1+
+- PostgreSQL 18
+- Gradle 9.1.0
 
 ### Database Setup
 

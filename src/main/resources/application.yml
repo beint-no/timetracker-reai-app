@@ -5,9 +5,9 @@ spring:
   application:
     name: reai-time-tracker-app
   datasource:
-    url: '${DB_URL_PROD:jdbc:postgresql://localhost:5432/timetracker}'
-    username: '${DB_USERNAME_PROD:timetracker_user}'
-    password: '${DB_PASSWORD_PROD:password}'
+    url: ${DB_URL_PROD}
+    username: ${DB_USERNAME_PROD}
+    password: ${DB_PASSWORD_PROD}
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: ${JPA_SHOW_SQL:true}
@@ -25,23 +25,23 @@ spring:
 
 reai:
   api:
-    base-url: '${REAI_API_BASE_URL:http://localhost:8080}'
+    base-url: ${REAI_API_BASE_URL}
     validate-endpoint: /api/auth/validate-token
   login:
-    url: '${REAI_LOGIN_URL:http://localhost:8080}'
+    url: ${REAI_LOGIN_URL}
   oauth2:
-    authorization-endpoint: '${REAI_OAUTH2_AUTH_ENDPOINT:http://localhost:8080/oauth2/authorize}'
-    token-endpoint: '${REAI_OAUTH2_TOKEN_ENDPOINT:http://localhost:8080/oauth2/token}'
-    redirect-uri: '${REAI_OAUTH2_REDIRECT_URI:http://localhost:8081}'
+    authorization-endpoint: ${REAI_OAUTH2_AUTH_ENDPOINT}
+    token-endpoint: ${REAI_OAUTH2_TOKEN_ENDPOINT}
+    redirect-uri: ${REAI_OAUTH2_REDIRECT_URI}
 
 logging:
   level:
     com:
       reai:
-        timetracker: ${LOG_LEVEL:DEBUG}
+        timetracker: ${LOG_LEVEL}
     org:
       springframework:
-        web: ${LOG_LEVEL_WEB:DEBUG}
+        web: ${LOG_LEVEL_WEB}
 
 management:
   endpoints:

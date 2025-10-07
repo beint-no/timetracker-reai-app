@@ -121,24 +121,6 @@
 </head>
 <body th:attr="data-reai-url=${reaiLoginUrl}">
 <div id="notification-area"></div>
-<wa-dialog id="token-dialog" th:attr="label=#{token.dialog.title}">
-        <div class="wa-stack wa-gap-m">
-            <div style="text-align: center;">
-                <wa-icon name="exclamation-triangle" style="font-size: 3rem; color: var(--wa-color-danger-fill-loud);"></wa-icon>
-            </div>
-            <div class="wa-stack wa-gap-2xs">
-                <h3 style="margin: 0;" th:text="#{token.dialog.heading}"></h3>
-                <p style="margin: 0; color: var(--wa-color-neutral-40);" th:text="#{token.dialog.message}"></p>
-            </div>
-            <div class="wa-cluster wa-gap-s" style="justify-content: center;">
-                <wa-button variant="primary" onclick="goToReai()">
-                    <wa-icon name="external-link" slot="prefix"></wa-icon>
-                    <span th:text="#{token.dialog.primary}"></span>
-                </wa-button>
-                <wa-button variant="neutral" onclick="closeTokenDialog()" th:text="#{token.dialog.close}"></wa-button>
-            </div>
-        </div>
-    </wa-dialog>
 <header class="header">
         <div class="header-content">
             <div class="wa-split wa-align-items-center">

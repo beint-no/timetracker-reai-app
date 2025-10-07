@@ -29,6 +29,10 @@ reai:
     validate-endpoint: /api/auth/validate-token
   login:
     url: '${REAI_LOGIN_URL:http://localhost:8080}'
+  oauth2:
+    authorization-endpoint: '${REAI_OAUTH2_AUTH_ENDPOINT:http://localhost:8080/oauth2/authorize}'
+    token-endpoint: '${REAI_OAUTH2_TOKEN_ENDPOINT:http://localhost:8080/oauth2/token}'
+    redirect-uri: '${REAI_OAUTH2_REDIRECT_URI:http://localhost:8081}'
 
 logging:
   level:

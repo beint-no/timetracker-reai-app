@@ -287,20 +287,179 @@
     </main>
 
     <script>
-        // Global state
         let timerInterval = null;
         let timerStartTime = null;
         let activeTab = 'today';
 
-        // Token management
         function getAuthToken() {
             const urlParams = new URLSearchParams(window.location.search);
+
+            const code = urlParams.get('code');
+            if (code) {
+                exchangeCodeForTokens(code);
+                return '';
+            }
+
+            const clientId = urlParams.get('client_id');
+            const clientSecret = urlParams.get('client_secret');
+            const scope = urlParams.get('scope');
+
+            if (clientId && clientSecret) {
+                localStorage.setItem('reai_client_id', clientId);
+                localStorage.setItem('reai_client_secret', clientSecret);
+                if (scope) {
+                    localStorage.setItem('reai_scope', scope);
+                }
+
+                window.history.replaceState({}, document.title, window.location.pathname);
+                setTimeout(() => startOAuth2Flow(), 100);
+                return '';
+            }
+
             const urlToken = urlParams.get('access_token');
+            const urlRefreshToken = urlParams.get('refresh_token');
             if (urlToken) {
                 localStorage.setItem('reai_access_token', 'Bearer ' + urlToken);
+                if (urlRefreshToken) {
+                    localStorage.setItem('reai_refresh_token', urlRefreshToken);
+                }
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
+
             return localStorage.getItem('reai_access_token') || '';
+        }
+
+        async function exchangeCodeForTokens(code) {
+            try {
+                const clientId = localStorage.getItem('reai_client_id');
+                const clientSecret = localStorage.getItem('reai_client_secret');
+
+                console.log('Exchanging code for tokens...');
+
+                if (!clientId || !clientSecret) {
+                    throw new Error('Client credentials not found');
+                }
+
+                const response = await fetch('/api/oauth2/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        clientId: clientId,
+                        clientSecret: clientSecret
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to exchange authorization code');
+                }
+
+                const data = await response.json();
+
+                localStorage.setItem('reai_access_token', 'Bearer ' + data.access_token);
+                if (data.refresh_token) {
+                    localStorage.setItem('reai_refresh_token', data.refresh_token);
+                }
+
+                console.log('Tokens saved successfully');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                window.location.reload();
+            } catch (error) {
+                console.error('Error exchanging code:', error);
+                showTokenDialog();
+            }
+        }
+
+        function getRefreshToken() {
+            return localStorage.getItem('reai_refresh_token') || '';
+        }
+
+        function getClientId() {
+            return localStorage.getItem('reai_client_id') || '';
+        }
+
+        function getClientSecret() {
+            return localStorage.getItem('reai_client_secret') || '';
+        }
+
+        function getScope() {
+            return localStorage.getItem('reai_scope') || 'contact:read';
+        }
+
+        function startOAuth2Flow() {
+            const clientId = getClientId();
+            let scope = getScope();
+
+            if (!clientId) {
+                console.error('No client_id found');
+                showTokenDialog();
+                return;
+            }
+
+            scope = scope.replace(/,/g, ' ');
+
+            const reaiBaseUrl = document.body.dataset.reaiUrl || 'http://localhost:8080';
+            const authUrl = new URL('/oauth2/authorize', reaiBaseUrl);
+            authUrl.searchParams.set('response_type', 'code');
+            authUrl.searchParams.set('client_id', clientId);
+            authUrl.searchParams.set('redirect_uri', window.location.origin);
+            authUrl.searchParams.set('scope', scope);
+
+            console.log('Starting OAuth2 flow, redirecting to:', authUrl.toString());
+
+            window.location.href = authUrl.toString();
+        }
+
+        async function refreshAccessToken() {
+            const refreshToken = getRefreshToken();
+            const clientId = getClientId();
+            const clientSecret = getClientSecret();
+
+            if (!refreshToken || !clientId || !clientSecret) {
+                console.error('Missing credentials for token refresh');
+                startOAuth2Flow();
+                return false;
+            }
+
+            try {
+                const response = await fetch('/api/oauth2/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        refreshToken: refreshToken,
+                        clientId: clientId,
+                        clientSecret: clientSecret
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to refresh token, status:', response.status);
+                    if (response.status === 400 || response.status === 401) {
+                        console.log('Refresh token invalid or expired, restarting OAuth flow...');
+                        startOAuth2Flow();
+                        return false;
+                    }
+                    throw new Error('Failed to refresh token');
+                }
+
+                const data = await response.json();
+
+                localStorage.setItem('reai_access_token', 'Bearer ' + data.access_token);
+                if (data.refresh_token) {
+                    localStorage.setItem('reai_refresh_token', data.refresh_token);
+                }
+
+                console.log('Access token refreshed successfully');
+                return true;
+            } catch (error) {
+                console.error('Error refreshing token:', error);
+                startOAuth2Flow();
+                return false;
+            }
         }
 
         function isTokenExpired(token) {
@@ -342,7 +501,7 @@
 
         function getSelectedProject() {
             const value = document.getElementById('timer-project-select')?.value;
-            if (value === 'all' || !value) return undefined;
+            if (value === 'all' || !value) return null;
             return Number(value);
         }
 
@@ -376,7 +535,6 @@
             }
 
             htmx.trigger('#load-stats-trigger', 'loadStats');
-            // Show dashboard after stats load
             setTimeout(() => {
                 if (getSelectedEmployee()) {
                     document.getElementById('stats-dashboard').style.display = 'block';
@@ -488,13 +646,40 @@
         });
 
         // Add auth header to all HTMX requests
-        document.body.addEventListener('htmx:configRequest', function(evt) {
-            const token = getAuthToken();
-            if (!token || isTokenExpired(token)) {
+        document.body.addEventListener('htmx:configRequest', async function(evt) {
+            let token = getAuthToken();
+
+            console.log('Token check:', token ? 'exists' : 'missing');
+            if (token) {
+                const isExpired = isTokenExpired(token);
+                console.log('Token expired:', isExpired);
+                if (isExpired) {
+                    try {
+                        const payload = JSON.parse(atob(token.replace('Bearer ', '').split('.')[1]));
+                        console.log('Token exp:', new Date(payload.exp * 1000).toISOString());
+                        console.log('Current time:', new Date().toISOString());
+                    } catch(e) {}
+                }
+            }
+
+            if (token && isTokenExpired(token)) {
+                console.log('Access token expired, attempting refresh...');
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    token = getAuthToken();
+                } else {
+                    evt.preventDefault();
+                    showTokenDialog();
+                    return;
+                }
+            }
+
+            if (!token) {
                 evt.preventDefault();
                 showTokenDialog();
                 return;
             }
+
             evt.detail.headers['Authorization'] = token;
         });
 

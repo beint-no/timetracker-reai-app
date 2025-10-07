@@ -74,21 +74,23 @@ class TimeTrackerViewController(
 
     @PostMapping("/timer/start")
     fun startTimer(
-        @RequestParam projectId: Long,
+        @RequestParam(required = false) projectId: Long?,
         @RequestParam employeeId: Long,
-        @RequestParam projectName: String,
+        @RequestParam(required = false) projectName: String?,
         @RequestHeader(value = "Authorization", required = false) authHeader: String?,
         session: jakarta.servlet.http.HttpSession,
         model: Model
     ): String {
-        // Save to session
+        if (projectId == null) {
+            model.addAttribute("error", "Please select a project first")
+            return "fragments/timer :: timer-display"
+        }
+
         session.setAttribute("selectedEmployeeId", employeeId)
         session.setAttribute("selectedProjectId", projectId.toString())
 
-        // Check if there's already an active timer BEFORE calling service
         val existingTimer = timeTrackerService.getCurrentTimer(employeeId)
         if (existingTimer.isPresent) {
-            // Show existing timer with warning
             val timer = existingTimer.get()
             model.addAttribute("timer", timer)
             model.addAttribute("hasTimer", true)
@@ -250,7 +252,6 @@ class TimeTrackerViewController(
 
         val allEntries = timeTrackerService.getTimeEntries(employeeId, projectId)
 
-        // Filter by tab (today or all)
         val filteredEntries = if (tab == "today") {
             val today = LocalDate.now()
             allEntries.filter { it.entryDate == today }

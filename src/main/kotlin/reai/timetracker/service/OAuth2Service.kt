@@ -26,34 +26,15 @@ class OAuth2Service(
         clientId: String,
         clientSecret: String
     ): OAuth2TokenResponse? {
-        return try {
-            logger.info("Exchanging authorization code for tokens...")
+        logger.info("Exchanging authorization code for tokens")
 
-            val credentials = "$clientId:$clientSecret"
-            val encodedCredentials = Base64.getEncoder().encodeToString(credentials.toByteArray())
-
-            val body: MultiValueMap<String, String> = LinkedMultiValueMap()
-            body.add("grant_type", "authorization_code")
-            body.add("code", code)
-            body.add("redirect_uri", redirectUri)
-
-            logger.debug("Calling token endpoint: $tokenEndpoint")
-
-            val response = restClientBuilder.build()
-                .post()
-                .uri(tokenEndpoint)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header("Authorization", "Basic $encodedCredentials")
-                .body(body)
-                .retrieve()
-                .body(OAuth2TokenResponse::class.java)
-
-            logger.info("Successfully exchanged code for tokens")
-            response
-        } catch (e: Exception) {
-            logger.error("Error exchanging authorization code: ${e.message}", e)
-            null
+        val body = LinkedMultiValueMap<String, String>().apply {
+            add("grant_type", "authorization_code")
+            add("code", code)
+            add("redirect_uri", redirectUri)
         }
+
+        return requestTokens(clientId, clientSecret, body, "exchange code")
     }
 
     fun refreshAccessToken(
@@ -61,21 +42,29 @@ class OAuth2Service(
         clientId: String,
         clientSecret: String
     ): OAuth2TokenResponse? {
+        logger.info("Refreshing access token for client: $clientId")
+        logger.debug("Refresh token (first 10 chars): ${refreshToken.take(10)}...")
+
+        val body = LinkedMultiValueMap<String, String>().apply {
+            add("grant_type", "refresh_token")
+            add("refresh_token", refreshToken)
+        }
+
+        return requestTokens(clientId, clientSecret, body, "refresh token")
+    }
+
+    private fun requestTokens(
+        clientId: String,
+        clientSecret: String,
+        body: MultiValueMap<String, String>,
+        operation: String
+    ): OAuth2TokenResponse? {
         return try {
-            logger.info("Refreshing access token for client: $clientId")
-            logger.debug("Refresh token (first 10 chars): ${refreshToken.take(10)}...")
-
-            val credentials = "$clientId:$clientSecret"
-            val encodedCredentials = Base64.getEncoder().encodeToString(credentials.toByteArray())
-
-            val body: MultiValueMap<String, String> = LinkedMultiValueMap()
-            body.add("grant_type", "refresh_token")
-            body.add("refresh_token", refreshToken)
+            val encodedCredentials = encodeCredentials(clientId, clientSecret)
 
             logger.debug("Calling token endpoint: $tokenEndpoint")
-            logger.debug("Request body: grant_type=refresh_token, refresh_token=${refreshToken.take(10)}...")
 
-            val response = restClientBuilder.build()
+            restClientBuilder.build()
                 .post()
                 .uri(tokenEndpoint)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -83,13 +72,16 @@ class OAuth2Service(
                 .body(body)
                 .retrieve()
                 .body(OAuth2TokenResponse::class.java)
-
-            logger.info("Successfully refreshed access token")
-            response
+                .also { logger.info("Successfully completed: $operation") }
         } catch (e: Exception) {
-            logger.error("Error refreshing access token for client $clientId: ${e.message}", e)
+            logger.error("Error during $operation: ${e.message}", e)
             null
         }
+    }
+
+    private fun encodeCredentials(clientId: String, clientSecret: String): String {
+        val credentials = "$clientId:$clientSecret"
+        return Base64.getEncoder().encodeToString(credentials.toByteArray())
     }
 }
 

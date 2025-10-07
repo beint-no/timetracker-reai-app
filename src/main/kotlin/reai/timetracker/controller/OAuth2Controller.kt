@@ -1,7 +1,6 @@
 package reai.timetracker.controller
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -16,15 +15,6 @@ class OAuth2Controller(
 ) {
     private val logger = LoggerFactory.getLogger(OAuth2Controller::class.java)
 
-    @Value("\${reai.oauth2.authorization-endpoint}")
-    private lateinit var authorizationEndpoint: String
-
-    @Value("\${reai.oauth2.redirect-uri}")
-    private lateinit var redirectUri: String
-
-    /**
-     * OAuth2 callback endpoint - receives authorization code
-     */
     @GetMapping("/authorized")
     fun authorized(
         @RequestParam(required = false) code: String?,
@@ -45,20 +35,12 @@ class OAuth2Controller(
 
         logger.info("Received authorization code")
         model.addAttribute("code", code)
-        model.addAttribute("authEndpoint", authorizationEndpoint)
-        model.addAttribute("redirectUri", redirectUri)
-
         return "oauth-callback"
     }
 
-    /**
-     * REST API endpoint to exchange authorization code for tokens
-     */
     @PostMapping("/api/oauth2/token")
     @ResponseBody
-    fun exchangeToken(
-        @RequestBody request: TokenExchangeRequest
-    ): ResponseEntity<OAuth2TokenResponse> {
+    fun exchangeToken(@RequestBody request: TokenExchangeRequest): ResponseEntity<OAuth2TokenResponse> {
         logger.info("Exchanging authorization code for tokens")
 
         val response = oauth2Service.exchangeCodeForTokens(
@@ -67,21 +49,13 @@ class OAuth2Controller(
             clientSecret = request.clientSecret
         )
 
-        return if (response != null) {
-            ResponseEntity.ok(response)
-        } else {
-            ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
-        }
+        return response?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
     }
 
-    /**
-     * REST API endpoint to refresh access token
-     */
     @PostMapping("/api/oauth2/refresh")
     @ResponseBody
-    fun refreshToken(
-        @RequestBody request: RefreshTokenRequest
-    ): ResponseEntity<OAuth2TokenResponse> {
+    fun refreshToken(@RequestBody request: RefreshTokenRequest): ResponseEntity<OAuth2TokenResponse> {
         logger.info("Refreshing access token")
 
         val response = oauth2Service.refreshAccessToken(
@@ -90,11 +64,8 @@ class OAuth2Controller(
             clientSecret = request.clientSecret
         )
 
-        return if (response != null) {
-            ResponseEntity.ok(response)
-        } else {
-            ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
-        }
+        return response?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
     }
 }
 

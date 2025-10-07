@@ -1,68 +1,62 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" class="wa-theme-default" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authorizing...</title>
+    <title th:text="#{oauth.authorizing}">Authorizing...</title>
+
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/webawesome.css"/>
+    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/themes/matter.css"/>
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/color/palettes/default.css"/>
+
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--wa-color-surface-lowered);
         }
         .container {
             text-align: center;
-            background: white;
-            padding: 3rem;
-            border-radius: 12px;
+            background: var(--wa-color-surface-default);
+            padding: var(--wa-space-3xl);
+            border-radius: var(--wa-border-radius-l);
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
         }
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1.5rem;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        h2 {
-            margin: 0 0 0.5rem;
-            color: #333;
-        }
-        p {
-            margin: 0;
-            color: #666;
-        }
-        .error {
-            color: #e74c3c;
-            margin-top: 1rem;
-            display: none;
+            margin: 0 auto var(--wa-space-xl);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="spinner"></div>
-        <h2>Authorizing...</h2>
-        <p>Please wait while we complete the authentication.</p>
-        <p class="error" id="error-message"></p>
+        <wa-spinner class="spinner" size="large"></wa-spinner>
+        <h2 style="margin: 0 0 var(--wa-space-s); color: var(--wa-color-text-normal);" th:text="#{oauth.authorizing}">Authorizing...</h2>
+        <p style="margin: 0; color: var(--wa-color-neutral-40);" th:text="#{oauth.please.wait}">Please wait while we complete the authentication.</p>
+
+        <wa-callout id="error-callout" variant="danger" style="margin-top: var(--wa-space-l); display: none;">
+            <p id="error-message" style="margin: 0;"></p>
+        </wa-callout>
     </div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
         const code = /*[[${code}]]*/ '';
+        const MSG_NO_CREDENTIALS = /*[[#{oauth.error.no.credentials}]]*/ 'Client credentials not found';
+        const MSG_EXCHANGE_FAILED = /*[[#{oauth.error.exchange.failed}]]*/ 'Failed to exchange code';
+        const MSG_NO_CODE = /*[[#{oauth.error.no.code}]]*/ 'No authorization code';
 
         console.log('OAuth callback page loaded');
         console.log('Authorization code:', code ? code.substring(0, 10) + '...' : 'MISSING');
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-callout').style.display = 'block';
+        }
 
         async function exchangeCodeForTokens() {
             try {
@@ -73,7 +67,7 @@
                 console.log('Client Secret:', clientSecret ? 'exists' : 'MISSING');
 
                 if (!clientId || !clientSecret) {
-                    throw new Error('Client credentials not found. Please start from the beginning.');
+                    throw new Error(MSG_NO_CREDENTIALS);
                 }
 
                 console.log('Calling /api/oauth2/token...');
@@ -90,32 +84,27 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to exchange authorization code');
+                    throw new Error(MSG_EXCHANGE_FAILED);
                 }
 
                 const data = await response.json();
 
-                // Store tokens
                 localStorage.setItem('reai_access_token', 'Bearer ' + data.access_token);
                 if (data.refresh_token) {
                     localStorage.setItem('reai_refresh_token', data.refresh_token);
                 }
 
-                // Redirect to main app
                 window.location.href = '/';
             } catch (error) {
                 console.error('Error exchanging code:', error);
-                document.getElementById('error-message').textContent = error.message;
-                document.getElementById('error-message').style.display = 'block';
+                showError(error.message);
             }
         }
 
-        // Start token exchange
         if (code) {
             exchangeCodeForTokens();
         } else {
-            document.getElementById('error-message').textContent = 'No authorization code received';
-            document.getElementById('error-message').style.display = 'block';
+            showError(MSG_NO_CODE);
         }
         /*]]>*/
     </script>

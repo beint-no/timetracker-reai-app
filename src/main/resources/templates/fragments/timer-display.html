@@ -16,7 +16,17 @@
         </wa-card>
     </div>
 <div th:unless="${hasTimer}" th:attr="data-running='false'">
-        <div style="padding: var(--wa-space-m); text-align: center;">
+        <div th:if="${error}" style="padding: var(--wa-space-m);">
+            <wa-callout variant="warning">
+                <div class="wa-stack wa-gap-s">
+                    <p style="margin: 0;" th:text="${error}"></p>
+                    <p style="margin: 0; font-size: var(--wa-font-size-s); color: var(--wa-color-neutral-40);">
+                        Please create a project in ReAI first, or select an existing project.
+                    </p>
+                </div>
+            </wa-callout>
+        </div>
+        <div th:unless="${error}" style="padding: var(--wa-space-m); text-align: center;">
             <p style="margin: 0; color: var(--wa-color-neutral-40);" th:text="#{timer.status.no.active}"></p>
         </div>
     </div>

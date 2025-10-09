@@ -1,6 +1,5 @@
 package reai.timetracker.config
 
-import org.springframework.boot.web.client.RestClientCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.ClientHttpRequestInterceptor
@@ -9,26 +8,20 @@ import org.springframework.web.client.RestClient
 import java.time.Duration
 
 @Configuration
-
 class RestClientConfiguration {
 
     @Bean
     fun restClientBuilder(): RestClient.Builder {
-        return RestClient.builder()
-            .requestInterceptor(loggingInterceptor())
-    }
-
-    @Bean
-    fun restClientCustomizer(): RestClientCustomizer {
-        return RestClientCustomizer { builder ->
-            builder
-                .defaultHeader("User-Agent", "ReAI-TimeTracker/1.0")
-                .defaultHeader("Accept", "application/json")
-                .requestFactory(SimpleClientHttpRequestFactory().apply {
-                    setConnectTimeout(Duration.ofSeconds(10))
-                    setReadTimeout(Duration.ofSeconds(30))
-                })
+        val requestFactory = SimpleClientHttpRequestFactory().apply {
+            setConnectTimeout(Duration.ofSeconds(10))
+            setReadTimeout(Duration.ofSeconds(30))
         }
+
+        return RestClient.builder()
+            .requestFactory(requestFactory)
+            .defaultHeader("User-Agent", "ReAI-TimeTracker/1.0")
+            .defaultHeader("Accept", "application/json")
+            .requestInterceptor(loggingInterceptor())
     }
 
     private fun loggingInterceptor(): ClientHttpRequestInterceptor {
@@ -36,7 +29,7 @@ class RestClientConfiguration {
             val startTime = System.currentTimeMillis()
 
             println("RestClient Request: ${request.method} ${request.uri}")
-            request.headers.forEach { (name, values) ->
+            request.headers.forEach { name, values ->
                 if (name.lowercase() == "authorization") {
                     println("Header: $name = $values")
                 }

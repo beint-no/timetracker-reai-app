@@ -39,11 +39,13 @@ class ReaiApiService(
 
     fun getEmployees(accessToken: String?): List<EmployeesDto> {
         return try {
-
-            val employees = restClient.get()
+            val request = restClient.get()
                 .uri("/api/employee/list-employees")
-                .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
+
+            accessToken?.let { request.header("Authorization", it) }
+
+            val employees = request
                 .retrieve()
                 .body(Array<EmployeesDto>::class.java)
                 ?.toList() ?: emptyList()
@@ -64,12 +66,14 @@ class ReaiApiService(
     }
 
     fun getEmployee(id: Long, accessToken: String?): EmployeesDto? {
-
         return try {
-            val employee = restClient.get()
+            val request = restClient.get()
                 .uri("api/employee/detail?id=${id}")
-                .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
+
+            accessToken?.let { request.header("Authorization", it) }
+
+            val employee = request
                 .retrieve()
                 .body(EmployeesDto::class.java)
 
@@ -104,8 +108,9 @@ class ReaiApiService(
                     }
                     builder.build()
                 }
-                .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
+
+            accessToken?.let { requestSpec.header("Authorization", it) }
 
             val projects = requestSpec
                 .retrieve()
@@ -133,12 +138,15 @@ class ReaiApiService(
         return try {
             val timesheetEntry = mapToReaiEntry(entry)
 
-            val response = restClient.post()
+            val request = restClient.post()
                 .uri("/api/timesheet/create")
-                .header("Authorization", accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(timesheetEntry)
+
+            accessToken?.let { request.header("Authorization", it) }
+
+            val response = request
                 .retrieve()
                 .toEntity(String::class.java)
 
